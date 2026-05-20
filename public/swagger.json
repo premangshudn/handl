@@ -1,0 +1,279 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "TaskFlow API",
+    "description": "API for professional task management web app",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "https://rpwneexotbictudjkcsv.supabase.co",
+      "description": "Supabase Root API"
+    }
+  ],
+  "security": [
+    {
+      "apiKey": []
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      },
+      "apiKey": {
+        "type": "apiKey",
+        "name": "apikey",
+        "in": "header"
+      }
+    },
+    "schemas": {
+      "Task": {
+        "type": "object",
+        "required": ["title"],
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "title": { "type": "string" },
+          "description": { "type": "string" },
+          "priority": { 
+            "type": "string", 
+            "enum": ["Low", "Medium", "High", "Critical"] 
+          },
+          "status": { 
+            "type": "string", 
+            "enum": ["Todo", "In Progress", "Done"] 
+          },
+          "due_date": { "type": "string", "format": "date-time" },
+          "created_at": { "type": "string", "format": "date-time" },
+          "updated_at": { "type": "string", "format": "date-time" },
+          "assigned_to": { "type": "string", "format": "uuid" },
+          "tags": { 
+            "type": "array", 
+            "items": { "type": "string" } 
+          }
+        }
+      },
+      "TaskInput": {
+        "type": "object",
+        "required": ["title"],
+        "properties": {
+          "title": { "type": "string", "example": "Test Task" },
+          "description": { "type": "string", "example": "Created via API" },
+          "priority": { 
+            "type": "string", 
+            "enum": ["Low", "Medium", "High", "Critical"],
+            "default": "Medium"
+          },
+          "status": { 
+            "type": "string", 
+            "enum": ["Todo", "In Progress", "Done"],
+            "default": "Todo"
+          },
+          "due_date": { "type": "string", "format": "date-time" },
+          "assigned_to": { "type": "string", "format": "uuid", "description": "Must match your authenticated user ID due to RLS." },
+          "tags": { 
+            "type": "array", 
+            "items": { "type": "string" } 
+          }
+        }
+      },
+      "Comment": {
+        "type": "object",
+        "required": ["task_id", "user_id", "body"],
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "task_id": { "type": "string", "format": "uuid" },
+          "user_id": { "type": "string", "format": "uuid" },
+          "body": { "type": "string" },
+          "created_at": { "type": "string", "format": "date-time" }
+        }
+      },
+      "Error": {
+        "type": "object",
+        "properties": {
+          "error": { "type": "boolean", "example": true },
+          "message": { "type": "string" },
+          "code": { "type": "string" }
+        }
+      }
+    },
+    "responses": {
+      "BadRequest": {
+        "description": "Bad Request",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/Error" }
+          }
+        }
+      }
+    }
+  },
+  "paths": {
+    "/auth/v1/token": {
+      "post": {
+        "summary": "Authenticate user and get JWT",
+        "parameters": [
+          {
+            "name": "grant_type",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "password"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["email", "password"],
+                "properties": {
+                  "email": {
+                    "type": "string"
+                  },
+                  "password": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successfully authenticated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "access_token": {
+                      "type": "string"
+                    },
+                    "token_type": {
+                      "type": "string",
+                      "example": "bearer"
+                    },
+                    "expires_in": {
+                      "type": "integer"
+                    },
+                    "refresh_token": {
+                      "type": "string"
+                    },
+                    "user": {
+                      "type": "object"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/rest/v1/tasks": {
+      "get": {
+        "summary": "List tasks",
+        "parameters": [
+          { "name": "status", "in": "query", "schema": { "type": "string" } },
+          { "name": "priority", "in": "query", "schema": { "type": "string" } },
+          { "name": "limit", "in": "query", "schema": { "type": "integer" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "A list of tasks",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": { "type": "array", "items": { "$ref": "#/components/schemas/Task" } },
+                    "meta": {
+                      "type": "object",
+                      "properties": {
+                        "page": { "type": "integer" },
+                        "total": { "type": "integer" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Create a task",
+        "security": [
+          {
+            "apiKey": [],
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/TaskInput" }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Task created" },
+          "400": { "$ref": "#/components/responses/BadRequest" }
+        }
+      }
+    },
+    "/rest/v1/tasks/{id}": {
+      "patch": {
+        "summary": "Update a task",
+        "security": [
+          {
+            "apiKey": [],
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/TaskInput" }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Task updated" },
+          "404": { "description": "Task not found" }
+        }
+      },
+      "delete": {
+        "summary": "Delete a task",
+        "security": [
+          {
+            "apiKey": [],
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }],
+        "responses": {
+          "204": { "description": "Task deleted" },
+          "404": { "description": "Task not found" }
+        }
+      }
+    }
+  }
+}

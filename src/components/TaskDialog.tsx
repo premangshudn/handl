@@ -1,0 +1,282 @@
+import { useEffect } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogHeader, 
+  DialogTitle, 
+  DialogFooter 
+} from '@/components/ui/dialog';
+import { 
+  Form, 
+  FormControl, 
+  FormField, 
+  FormItem, 
+  FormLabel, 
+  FormMessage 
+} from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from '@/components/ui/select';
+import type { Task } from '@/lib/supabase';
+import { supabase } from '@/lib/supabase';
+import { toast } from 'sonner';
+import { Loader2, Trash2 } from 'lucide-react';
+
+const taskSchema = z.object({
+  title: z.string().min(1, 'Title is required'),
+  description: z.string().optional(),
+  priority: z.enum(['Low', 'Medium', 'High', 'Critical']),
+  status: z.enum(['Todo', 'In Progress', 'Done']),
+  due_date: z.string().optional(),
+  tags: z.string().optional(),
+});
+
+type TaskFormValues = z.infer<typeof taskSchema>;
+
+interface TaskDialogProps {
+  task?: Task | null;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onRefresh: () => void;
+  defaultStatus?: Task['status'];
+}
+
+export function TaskDialog({ task, open, onOpenChange, onRefresh, defaultStatus }: TaskDialogProps) {
+  const form = useForm<TaskFormValues>({
+    resolver: zodResolver(taskSchema),
+    defaultValues: {
+      title: '',
+      description: '',
+      priority: 'Medium',
+      status: defaultStatus || 'Todo',
+      due_date: '',
+      tags: '',
+    },
+  });
+
+  useEffect(() => {
+    if (task) {
+      form.reset({
+        title: task.title,
+        description: task.description || '',
+        priority: task.priority,
+        status: task.status,
+        due_date: task.due_date ? new Date(task.due_date).toISOString().split('T')[0] : '',
+        tags: task.tags?.join(', ') || '',
+      });
+    } else {
+      form.reset({
+        title: '',
+        description: '',
+        priority: 'Medium',
+        status: defaultStatus || 'Todo',
+        due_date: '',
+        tags: '',
+      });
+    }
+  }, [task, open, defaultStatus, form]);
+
+  const onSubmit = async (values: TaskFormValues) => {
+    try {
+      const { data: userData } = await supabase.auth.getUser();
+      if (!userData.user) throw new Error('User not authenticated');
+
+      const taskData = {
+        title: values.title,
+        description: values.description,
+        priority: values.priority,
+        status: values.status,
+        due_date: values.due_date ? new Date(values.due_date).toISOString() : null,
+        tags: values.tags ? values.tags.split(',').map(t => t.trim()) : [],
+        assigned_to: userData.user.id,
+      };
+
+      if (task) {
+        const { error } = await supabase
+          .from('tasks')
+          .update(taskData)
+          .eq('id', task.id);
+        if (error) throw error;
+        toast.success('Task updated successfully');
+      } else {
+        const { error } = await supabase
+          .from('tasks')
+          .insert([taskData]);
+        if (error) throw error;
+        toast.success('Task created successfully');
+      }
+
+      onRefresh();
+      onOpenChange(false);
+    } catch (error: any) {
+      toast.error(error.message);
+    }
+  };
+
+  const onDelete = async () => {
+    if (!task) return;
+    if (!confirm('Are you sure you want to delete this task?')) return;
+
+    try {
+      const { error } = await supabase
+        .from('tasks')
+        .delete()
+        .eq('id', task.id);
+      if (error) throw error;
+      toast.success('Task deleted successfully');
+      onRefresh();
+      onOpenChange(false);
+    } catch (error: any) {
+      toast.error(error.message);
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-[500px]">
+        <DialogHeader>
+          <DialogTitle>{task ? 'Edit Task' : 'Create New Task'}</DialogTitle>
+        </DialogHeader>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 py-4">
+            <FormField
+              control={form.control}
+              name="title"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Title</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Finish project proposal" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="description"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Description</FormLabel>
+                  <FormControl>
+                    <Textarea 
+                      placeholder="Add more details about this task..." 
+                      className="resize-none" 
+                      {...field} 
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="status"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Status</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select status" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="Todo">Todo</SelectItem>
+                        <SelectItem value="In Progress">In Progress</SelectItem>
+                        <SelectItem value="Done">Done</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="priority"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Priority</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select priority" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="Low">Low</SelectItem>
+                        <SelectItem value="Medium">Medium</SelectItem>
+                        <SelectItem value="High">High</SelectItem>
+                        <SelectItem value="Critical">Critical</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="due_date"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Due Date</FormLabel>
+                    <FormControl>
+                      <Input type="date" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="tags"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Tags (comma separated)</FormLabel>
+                    <FormControl>
+                      <Input placeholder="work, urgent" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+            <DialogFooter className="pt-4 gap-2 sm:gap-0">
+              {task && (
+                <Button 
+                  type="button" 
+                  variant="destructive" 
+                  onClick={onDelete}
+                  className="mr-auto"
+                >
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Delete
+                </Button>
+              )}
+              <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>
+                Cancel
+              </Button>
+              <Button type="submit">
+                {form.formState.isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                {task ? 'Update Task' : 'Create Task'}
+              </Button>
+            </DialogFooter>
+          </form>
+        </Form>
+      </DialogContent>
+    </Dialog>
+  );
+}
