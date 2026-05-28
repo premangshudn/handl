@@ -30,7 +30,11 @@ import {
 import type { Task } from '@/lib/supabase';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
-import { Loader2, Trash2 } from 'lucide-react';
+import { Loader2, Trash2, Calendar as CalendarIcon } from 'lucide-react';
+import { format } from 'date-fns';
+import { cn } from '@/lib/utils';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
 const taskSchema = z.object({
   title: z.string().min(1, 'Title is required'),
@@ -91,27 +95,37 @@ export function TaskDialog({ task, open, onOpenChange, onRefresh, defaultStatus 
       const { data: userData } = await supabase.auth.getUser();
       if (!userData.user) throw new Error('User not authenticated');
 
-      const taskData = {
-        title: values.title,
-        description: values.description,
-        priority: values.priority,
-        status: values.status,
-        due_date: values.due_date ? new Date(values.due_date).toISOString() : null,
-        tags: values.tags ? values.tags.split(',').map(t => t.trim()) : [],
-        assigned_to: userData.user.id,
-      };
-
       if (task) {
+        const updateData = {
+          title: values.title,
+          description: values.description,
+          priority: values.priority,
+          status: values.status,
+          due_date: values.due_date ? new Date(values.due_date).toISOString() : null,
+          tags: values.tags ? values.tags.split(',').map(t => t.trim()) : [],
+          assigned_to: task.assigned_to, // Preserve original assignee
+        };
+
         const { error } = await supabase
           .from('tasks')
-          .update(taskData)
+          .update(updateData)
           .eq('id', task.id);
         if (error) throw error;
         toast.success('Task updated successfully');
       } else {
+        const insertData = {
+          title: values.title,
+          description: values.description,
+          priority: values.priority,
+          status: values.status,
+          due_date: values.due_date ? new Date(values.due_date).toISOString() : null,
+          tags: values.tags ? values.tags.split(',').map(t => t.trim()) : [],
+          assigned_to: userData.user.id, // Set initial assignee to creator
+        };
+
         const { error } = await supabase
           .from('tasks')
-          .insert([taskData]);
+          .insert([insertData]);
         if (error) throw error;
         toast.success('Task created successfully');
       }
@@ -156,7 +170,7 @@ export function TaskDialog({ task, open, onOpenChange, onRefresh, defaultStatus 
                 <FormItem>
                   <FormLabel>Title</FormLabel>
                   <FormControl>
-                    <Input placeholder="Finish project proposal" {...field} />
+                    <Input placeholder="Call Mom to catch up..." {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -231,11 +245,40 @@ export function TaskDialog({ task, open, onOpenChange, onRefresh, defaultStatus 
                 control={form.control}
                 name="due_date"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Due Date</FormLabel>
-                    <FormControl>
-                      <Input type="date" {...field} />
-                    </FormControl>
+                  <FormItem className="flex flex-col">
+                    <FormLabel className="mb-1">Due Date</FormLabel>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <FormControl>
+                          <Button
+                            variant="outline"
+                            className={cn(
+                              "w-full pl-3 text-left font-normal rounded-xl h-10 border shadow-inner bg-background/50 hover:bg-background transition-colors flex items-center justify-between",
+                              !field.value && "text-muted-foreground"
+                            )}
+                          >
+                            <span>
+                              {field.value ? (
+                                format(new Date(field.value), "PPP")
+                              ) : (
+                                "Pick a date"
+                              )}
+                            </span>
+                            <CalendarIcon className="h-4 w-4 opacity-50 text-muted-foreground" />
+                          </Button>
+                        </FormControl>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0 rounded-2xl shadow-xl border bg-card" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={field.value ? new Date(field.value) : undefined}
+                          onSelect={(date) => field.onChange(date ? date.toISOString() : "")}
+                          disabled={(date) => date < new Date("1900-01-01")}
+                          initialFocus
+                          className="rounded-2xl"
+                        />
+                      </PopoverContent>
+                    </Popover>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -247,7 +290,7 @@ export function TaskDialog({ task, open, onOpenChange, onRefresh, defaultStatus 
                   <FormItem>
                     <FormLabel>Tags (comma separated)</FormLabel>
                     <FormControl>
-                      <Input placeholder="work, urgent" {...field} />
+                      <Input placeholder="work, urgent" {...field} className="rounded-xl shadow-inner bg-background/50" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

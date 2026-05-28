@@ -236,9 +236,7 @@
           "201": { "description": "Task created" },
           "400": { "$ref": "#/components/responses/BadRequest" }
         }
-      }
-    },
-    "/rest/v1/tasks/{id}": {
+      },
       "patch": {
         "summary": "Update a task",
         "security": [
@@ -247,7 +245,18 @@
             "bearerAuth": []
           }
         ],
-        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "eq.79c246c1-cfdc-4204-a13d-e6d596bc063b"
+            },
+            "description": "Filter for the task ID in PostgREST syntax (e.g. eq.UUID)"
+          }
+        ],
         "requestBody": {
           "content": {
             "application/json": {
@@ -257,6 +266,7 @@
         },
         "responses": {
           "200": { "description": "Task updated" },
+          "400": { "$ref": "#/components/responses/BadRequest" },
           "404": { "description": "Task not found" }
         }
       },
@@ -268,9 +278,21 @@
             "bearerAuth": []
           }
         ],
-        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "eq.79c246c1-cfdc-4204-a13d-e6d596bc063b"
+            },
+            "description": "Filter for the task ID in PostgREST syntax (e.g. eq.UUID)"
+          }
+        ],
         "responses": {
           "204": { "description": "Task deleted" },
+          "400": { "$ref": "#/components/responses/BadRequest" },
           "404": { "description": "Task not found" }
         }
       }

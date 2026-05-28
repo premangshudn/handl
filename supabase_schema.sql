@@ -28,8 +28,8 @@ ALTER TABLE public.tasks ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.comments ENABLE ROW LEVEL SECURITY;
 
 -- 4. Create Policies for Tasks
-CREATE POLICY "Users can view all tasks" ON public.tasks
-    FOR SELECT USING (true);
+CREATE POLICY "Users can view their own tasks" ON public.tasks
+    FOR SELECT USING (auth.uid() = assigned_to);
 
 CREATE POLICY "Users can insert their own tasks" ON public.tasks
     FOR INSERT WITH CHECK (auth.uid() = assigned_to);
@@ -41,11 +41,22 @@ CREATE POLICY "Users can delete their own tasks" ON public.tasks
     FOR DELETE USING (auth.uid() = assigned_to);
 
 -- 5. Create Policies for Comments
-CREATE POLICY "Users can view all comments" ON public.comments
-    FOR SELECT USING (true);
+CREATE POLICY "Users can view comments on their own tasks" ON public.comments
+    FOR SELECT USING (
+        EXISTS (
+            SELECT 1 FROM public.tasks
+            WHERE tasks.id = comments.task_id AND tasks.assigned_to = auth.uid()
+        )
+    );
 
-CREATE POLICY "Users can insert their own comments" ON public.comments
-    FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "Users can insert comments on their own tasks" ON public.comments
+    FOR INSERT WITH CHECK (
+        auth.uid() = user_id AND
+        EXISTS (
+            SELECT 1 FROM public.tasks
+            WHERE tasks.id = comments.task_id AND tasks.assigned_to = auth.uid()
+        )
+    );
 
 -- 6. Trigger for updated_at
 CREATE OR REPLACE FUNCTION update_updated_at_column()

@@ -21,6 +21,7 @@ export default function App() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [defaultStatus, setDefaultStatus] = useState<Task['status']>('Todo');
+  const [isRecovering, setIsRecovering] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -30,8 +31,11 @@ export default function App() {
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    } = supabase.auth.onAuthStateChange((event, session) => {
       setSession(session);
+      if (event === 'PASSWORD_RECOVERY') {
+        setIsRecovering(true);
+      }
     });
 
     return () => subscription.unsubscribe();
@@ -40,14 +44,42 @@ export default function App() {
   useEffect(() => {
     if (session) {
       fetchTasks();
+      const preferredView = session.user.user_metadata?.default_view as ViewType;
+      if (preferredView && ['dashboard', 'kanban', 'list'].includes(preferredView)) {
+        setActiveView(preferredView);
+      }
     }
   }, [session]);
 
+  const handleProfileUpdate = async () => {
+    try {
+      // Force Supabase to refresh the session token so it contains the fresh user_metadata
+      const { data: { session: newSession } } = await supabase.auth.refreshSession();
+      if (newSession) {
+        setSession(newSession);
+      } else {
+        // Fallback to getSession if refreshSession didn't return a new session
+        const { data: { session: currentSession } } = await supabase.auth.getSession();
+        setSession(currentSession);
+      }
+      fetchTasks();
+      
+      const preferredView = (newSession || session)?.user?.user_metadata?.default_view as ViewType;
+      if (preferredView && ['dashboard', 'kanban', 'list'].includes(preferredView)) {
+        setActiveView(preferredView);
+      }
+    } catch (err) {
+      console.error('Error refreshing session:', err);
+    }
+  };
+
   const fetchTasks = async () => {
+    if (!session?.user?.id) return;
     try {
       const { data, error } = await supabase
         .from('tasks')
         .select('*')
+        .eq('assigned_to', session.user.id)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -76,10 +108,19 @@ export default function App() {
     );
   }
 
+  if (isRecovering) {
+    return (
+      <>
+        <Auth mode="reset" onResetSuccess={() => setIsRecovering(false)} />
+        <Toaster position="top-center" />
+      </>
+    );
+  }
+
   if (!session) {
     return (
       <>
-        <Auth />
+        <Auth mode="auth" />
         <Toaster position="top-center" />
       </>
     );
@@ -88,13 +129,20 @@ export default function App() {
   return (
     <>
       <Layout 
-        userEmail={session.user.email} 
+        session={session} 
         activeView={activeView} 
         setActiveView={setActiveView}
         onAddTask={() => handleAddTask()}
+        onProfileUpdate={handleProfileUpdate}
       >
         <div className="max-w-7xl mx-auto h-full">
-          {activeView === 'dashboard' && <Dashboard tasks={tasks} />}
+          {activeView === 'dashboard' && (
+            <Dashboard 
+              tasks={tasks} 
+              session={session} 
+              onRefresh={fetchTasks} 
+            />
+          )}
           {activeView === 'kanban' && (
             <KanbanBoard 
               tasks={tasks} 

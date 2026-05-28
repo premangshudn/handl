@@ -32,7 +32,7 @@ export function TaskList({ tasks, onTaskClick }: TaskListProps) {
   };
 
   return (
-    <div className="bg-card border rounded-xl overflow-hidden shadow-sm">
+    <div className="bg-card border rounded-xl overflow-hidden shadow-sm overflow-x-auto w-full">
       <Table>
         <TableHeader className="bg-muted/50">
           <TableRow>
