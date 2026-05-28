@@ -9,8 +9,7 @@ import {
   LogOut, 
   Plus,
   CheckCircle2,
-  User,
-  Settings
+  User
 } from 'lucide-react';
 import { toast } from 'sonner';
 import type { Session } from '@supabase/supabase-js';

@@ -28,7 +28,7 @@ import {
   SelectTrigger, 
   SelectValue 
 } from '@/components/ui/select';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Avatar, AvatarImage } from '@/components/ui/avatar';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
 import { Loader2, Camera, Sparkles } from 'lucide-react';

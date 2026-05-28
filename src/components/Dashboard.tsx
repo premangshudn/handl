@@ -6,7 +6,6 @@ import {
   AlertCircle, 
   Sparkles,
   Send,
-  Plus,
   Flame,
   ArrowRight,
   TrendingUp,
