@@ -188,7 +188,7 @@ export function Dashboard({ tasks, session, onRefresh }: DashboardProps) {
                 Quick Capture
               </CardTitle>
               <CardDescription className="text-xs">
-                Dump your thoughts instantly. Captured tasks go straight to your Inbox (`Todo`).
+                Dump your thoughts instantly. Captured tasks go straight to your Task List.
               </CardDescription>
             </CardHeader>
             <CardContent>
