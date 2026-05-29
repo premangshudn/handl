@@ -111,7 +111,7 @@ export function TaskDialog({ task, open, onOpenChange, onRefresh, defaultStatus 
           .update(updateData)
           .eq('id', task.id);
         if (error) throw error;
-        toast.success('Task updated successfully');
+        toast.success('Handl updated successfully');
       } else {
         const insertData = {
           title: values.title,
@@ -127,7 +127,7 @@ export function TaskDialog({ task, open, onOpenChange, onRefresh, defaultStatus 
           .from('tasks')
           .insert([insertData]);
         if (error) throw error;
-        toast.success('Task created successfully');
+        toast.success('Handl created successfully');
       }
 
       onRefresh();
@@ -139,7 +139,7 @@ export function TaskDialog({ task, open, onOpenChange, onRefresh, defaultStatus 
 
   const onDelete = async () => {
     if (!task) return;
-    if (!confirm('Are you sure you want to delete this task?')) return;
+    if (!confirm('Are you sure you want to delete this handl?')) return;
 
     try {
       const { error } = await supabase
@@ -147,7 +147,7 @@ export function TaskDialog({ task, open, onOpenChange, onRefresh, defaultStatus 
         .delete()
         .eq('id', task.id);
       if (error) throw error;
-      toast.success('Task deleted successfully');
+      toast.success('Handl deleted successfully');
       onRefresh();
       onOpenChange(false);
     } catch (error: any) {
@@ -157,9 +157,9 @@ export function TaskDialog({ task, open, onOpenChange, onRefresh, defaultStatus 
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>{task ? 'Edit Task' : 'Create New Task'}</DialogTitle>
+          <DialogTitle>{task ? 'Edit Handl' : 'Create New Handl'}</DialogTitle>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 py-4">
@@ -184,7 +184,7 @@ export function TaskDialog({ task, open, onOpenChange, onRefresh, defaultStatus 
                   <FormLabel>Description</FormLabel>
                   <FormControl>
                     <Textarea 
-                      placeholder="Add more details about this task..." 
+                      placeholder="Add more details about this handl..." 
                       className="resize-none" 
                       {...field} 
                     />
@@ -314,7 +314,7 @@ export function TaskDialog({ task, open, onOpenChange, onRefresh, defaultStatus 
               </Button>
               <Button type="submit">
                 {form.formState.isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                {task ? 'Update Task' : 'Create Task'}
+                {task ? 'Update Handl' : 'Create Handl'}
               </Button>
             </DialogFooter>
           </form>

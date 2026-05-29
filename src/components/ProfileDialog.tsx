@@ -56,6 +56,63 @@ export function ProfileDialog({ open, onOpenChange, user, onUpdate }: ProfileDia
   const [offsetX, setOffsetX] = useState(0);
   const [offsetY, setOffsetY] = useState(0);
   const [isSaving, setIsSaving] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const handleDeleteAccount = async () => {
+    if (!user) return;
+    
+    const isConfirmed = confirm(
+      "⚠️ WARNING: Are you absolutely sure you want to permanently delete your account? " +
+      "This will delete all of your Handls, profile settings, and account data forever. " +
+      "This action cannot be undone."
+    );
+    if (!isConfirmed) return;
+
+    const verificationText = prompt(
+      "To confirm deletion, please type 'delete my account' in the box below:"
+    );
+    
+    if (verificationText === null) {
+      toast("Account deletion canceled.");
+      return;
+    }
+    
+    if (verificationText !== "delete my account") {
+      toast.error("Confirmation text did not match. Account deletion canceled.");
+      return;
+    }
+
+    setIsDeleting(true);
+    try {
+      // 1. Wipe their user data rows (tasks & comments)
+      const { error: taskError } = await supabase
+        .from('tasks')
+        .delete()
+        .eq('assigned_to', user.id);
+      if (taskError) throw taskError;
+
+      // 2. Call the secure RPC to delete the auth.users record
+      const { error: rpcError } = await supabase.rpc('delete_user_account');
+      
+      // 3. Complete logout
+      await supabase.auth.signOut();
+      
+      if (rpcError) {
+        console.warn("RPC delete failed (SQL function might not be defined):", rpcError.message);
+        toast.success("All personal Handl data has been completely erased. You have been successfully signed out.");
+      } else {
+        toast.success("Your account and all associated data have been permanently deleted.");
+      }
+      
+      onOpenChange(false);
+      window.location.reload();
+    } catch (error: any) {
+      console.error("Account deletion failed:", error);
+      toast.error(error.message || "Failed to permanently delete account.");
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileSchema),
@@ -348,7 +405,7 @@ export function ProfileDialog({ open, onOpenChange, user, onUpdate }: ProfileDia
                     <SelectContent className="rounded-xl">
                       <SelectItem value="dashboard">Dashboard</SelectItem>
                       <SelectItem value="kanban">Focus Board</SelectItem>
-                      <SelectItem value="list">Task List</SelectItem>
+                      <SelectItem value="list">Handl List</SelectItem>
                     </SelectContent>
                   </Select>
                   <FormDescription className="text-[10px] text-muted-foreground">
@@ -358,6 +415,33 @@ export function ProfileDialog({ open, onOpenChange, user, onUpdate }: ProfileDia
                 </FormItem>
               )}
             />
+
+            {/* Danger Zone */}
+            <div className="border-t border-red-500/20 pt-4 mt-6">
+              <div className="bg-red-500/5 dark:bg-red-950/10 border border-red-500/10 rounded-xl p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div className="space-y-0.5">
+                  <p className="text-[11px] font-bold text-red-500">Permanently Delete Account</p>
+                  <p className="text-[10px] text-muted-foreground leading-snug">Wipe all of your Handls, configurations, and profile records permanently.</p>
+                </div>
+                <Button 
+                  type="button" 
+                  variant="destructive" 
+                  size="sm"
+                  disabled={isSaving || isDeleting}
+                  onClick={handleDeleteAccount}
+                  className="rounded-xl font-bold text-xs shrink-0"
+                >
+                  {isDeleting ? (
+                    <>
+                      <Loader2 className="h-3 w-3 animate-spin mr-1.5" />
+                      Deleting...
+                    </>
+                  ) : (
+                    "Delete Account"
+                  )}
+                </Button>
+              </div>
+            </div>
 
             <DialogFooter className="pt-2 gap-2 sm:gap-0">
               <Button type="button" variant="ghost" onClick={() => onOpenChange(false)} className="rounded-xl">

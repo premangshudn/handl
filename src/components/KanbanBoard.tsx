@@ -1,15 +1,16 @@
 import type { Task } from '@/lib/supabase';
 import { TaskCard } from './TaskCard';
-import { MoreHorizontal, Plus } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface KanbanBoardProps {
   tasks: Task[];
   onTaskClick: (task: Task) => void;
   onAddTask: (status: Task['status']) => void;
+  onTagClick?: (tag: string) => void;
 }
 
-export function KanbanBoard({ tasks, onTaskClick, onAddTask }: KanbanBoardProps) {
+export function KanbanBoard({ tasks, onTaskClick, onAddTask, onTagClick }: KanbanBoardProps) {
   const columns: { title: string; status: Task['status']; color: string }[] = [
     { title: 'Todo', status: 'Todo', color: 'bg-muted/50' },
     { title: 'In Progress', status: 'In Progress', color: 'bg-blue-50/50' },
@@ -36,9 +37,6 @@ export function KanbanBoard({ tasks, onTaskClick, onAddTask }: KanbanBoardProps)
               >
                 <Plus className="h-4 w-4" />
               </Button>
-              <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground">
-                <MoreHorizontal className="h-4 w-4" />
-              </Button>
             </div>
           </div>
 
@@ -46,7 +44,7 @@ export function KanbanBoard({ tasks, onTaskClick, onAddTask }: KanbanBoardProps)
             {tasks
               .filter(t => t.status === column.status)
               .map(task => (
-                <TaskCard key={task.id} task={task} onClick={onTaskClick} />
+                <TaskCard key={task.id} task={task} onClick={onTaskClick} onTagClick={onTagClick} />
               ))
             }
             {tasks.filter(t => t.status === column.status).length === 0 && (

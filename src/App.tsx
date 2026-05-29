@@ -22,6 +22,7 @@ export default function App() {
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [defaultStatus, setDefaultStatus] = useState<Task['status']>('Todo');
   const [isRecovering, setIsRecovering] = useState(false);
+  const [selectedTag, setSelectedTag] = useState<string | null>(null);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -136,6 +137,21 @@ export default function App() {
         onProfileUpdate={handleProfileUpdate}
       >
         <div className="max-w-7xl mx-auto h-full">
+          {activeView !== 'dashboard' && selectedTag && (
+            <div className="flex items-center gap-2 mb-6 bg-primary/5 hover:bg-primary/10 border border-primary/15 px-3.5 py-1.5 rounded-full w-fit transition-all animate-in fade-in slide-in-from-top-1 duration-200">
+              <span className="text-xs font-semibold text-primary flex items-center gap-1">
+                Active Filter: <span className="bg-primary text-primary-foreground px-2 py-0.5 rounded-full font-bold">#{selectedTag}</span>
+              </span>
+              <button 
+                onClick={() => setSelectedTag(null)} 
+                className="text-xs text-primary hover:text-primary/70 font-black ml-1 p-0.5 hover:bg-primary/10 rounded-full h-4 w-4 flex items-center justify-center transition-colors focus:outline-none"
+                title="Clear Filter"
+              >
+                ✕
+              </button>
+            </div>
+          )}
+
           {activeView === 'dashboard' && (
             <Dashboard 
               tasks={tasks} 
@@ -145,15 +161,18 @@ export default function App() {
           )}
           {activeView === 'kanban' && (
             <KanbanBoard 
-              tasks={tasks} 
+              tasks={selectedTag ? tasks.filter(t => t.tags?.includes(selectedTag)) : tasks} 
               onTaskClick={handleEditTask} 
               onAddTask={handleAddTask}
+              onTagClick={setSelectedTag}
             />
           )}
           {activeView === 'list' && (
             <TaskList 
-              tasks={tasks} 
+              tasks={selectedTag ? tasks.filter(t => t.tags?.includes(selectedTag)) : tasks} 
               onTaskClick={handleEditTask} 
+              onRefresh={fetchTasks}
+              onTagClick={setSelectedTag}
             />
           )}
         </div>

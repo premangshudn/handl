@@ -51,7 +51,7 @@ export function Layout({ children, session, activeView, setActiveView, onAddTask
   const navItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { id: 'kanban', label: 'Focus Board', icon: Kanban },
-    { id: 'list', label: 'Task List', icon: List },
+    { id: 'list', label: 'Handl List', icon: List },
   ] as const;
 
   return (
@@ -84,7 +84,7 @@ export function Layout({ children, session, activeView, setActiveView, onAddTask
 
         <div className="p-4 border-t mt-auto">
           <Button onClick={onAddTask} className="w-full gap-2 shadow-md">
-            <Plus className="h-4 w-4" /> New Task
+            <Plus className="h-4 w-4" /> New Handl
           </Button>
         </div>
       </aside>
@@ -98,11 +98,7 @@ export function Layout({ children, session, activeView, setActiveView, onAddTask
             <h1 className="text-xl font-bold">Handl</h1>
           </div>
           
-          <div className="hidden md:block">
-            <h2 className="text-sm font-medium text-muted-foreground capitalize">
-              {activeView === 'kanban' ? 'Focus Board' : activeView}
-            </h2>
-          </div>
+          <div className="hidden md:block"></div>
 
           <div className="flex items-center gap-4">
             <DropdownMenu>
@@ -170,7 +166,7 @@ export function Layout({ children, session, activeView, setActiveView, onAddTask
             <div className="bg-primary text-primary-foreground p-1.5 rounded-full shadow-md hover:bg-primary/95 transition-colors">
               <Plus className="h-4 w-4" />
             </div>
-            <span className="text-[10px] font-semibold">New Task</span>
+            <span className="text-[10px] font-semibold">New Handl</span>
           </button>
         </nav>
 

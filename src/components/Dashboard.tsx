@@ -188,7 +188,7 @@ export function Dashboard({ tasks, session, onRefresh }: DashboardProps) {
                 Quick Capture
               </CardTitle>
               <CardDescription className="text-xs">
-                Dump your thoughts instantly. Captured Handls go straight to your Task List.
+                Dump your thoughts instantly. Captured Handls go straight to your Handl List.
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -367,7 +367,7 @@ export function Dashboard({ tasks, session, onRefresh }: DashboardProps) {
             <CardHeader className="pb-1">
               <CardTitle className="text-sm font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
                 <TrendingUp className="h-4 w-4 text-primary" />
-                Task Distribution
+                Handl Distribution
               </CardTitle>
             </CardHeader>
             <CardContent className="h-[180px] pt-4 pl-0">
