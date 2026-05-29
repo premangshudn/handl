@@ -62,7 +62,7 @@ export function Layout({ children, session, activeView, setActiveView, onAddTask
           <div className="bg-primary p-1.5 rounded-lg">
             <CheckCircle2 className="h-6 w-6 text-primary-foreground" />
           </div>
-          <h1 className="text-xl font-bold tracking-tight">TaskFlow</h1>
+          <h1 className="text-xl font-bold tracking-tight">Handl</h1>
         </div>
 
         <nav className="flex-1 px-4 py-4 space-y-1">
@@ -95,7 +95,7 @@ export function Layout({ children, session, activeView, setActiveView, onAddTask
         <header className="h-16 border-b flex items-center justify-between px-6 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-10">
           <div className="md:hidden flex items-center gap-2">
             <CheckCircle2 className="h-6 w-6 text-primary" />
-            <h1 className="text-xl font-bold">TaskFlow</h1>
+            <h1 className="text-xl font-bold">Handl</h1>
           </div>
           
           <div className="hidden md:block">

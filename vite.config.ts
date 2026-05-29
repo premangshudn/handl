@@ -13,9 +13,9 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.png', 'favicon.ico', 'apple-touch-icon.png'],
       manifest: {
-        name: 'TaskFlow Personal Space',
-        short_name: 'TaskFlow',
-        description: 'Your Mindful Personal Task Workspace',
+        name: 'Handl Personal Space',
+        short_name: 'Handl',
+        description: 'Your Mindful Personal Workspace',
         theme_color: '#09090b',
         background_color: '#09090b',
         display: 'standalone',

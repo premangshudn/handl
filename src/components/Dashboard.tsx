@@ -111,11 +111,11 @@ export function Dashboard({ tasks, session, onRefresh }: DashboardProps) {
 
       if (error) throw error;
 
-      toast.success('Task captured in Inbox!');
+      toast.success('Handl captured!');
       setQuickTitle('');
       if (onRefresh) onRefresh();
     } catch (error: any) {
-      toast.error(error.message || 'Failed to capture task');
+      toast.error(error.message || 'Failed to capture Handl');
     } finally {
       setIsCapturing(false);
     }
@@ -130,10 +130,10 @@ export function Dashboard({ tasks, session, onRefresh }: DashboardProps) {
         .eq('id', taskId);
 
       if (error) throw error;
-      toast.success('Task completed! Keep up the momentum.');
+      toast.success('Handl completed! Keep up the momentum.');
       if (onRefresh) onRefresh();
     } catch (error: any) {
-      toast.error(error.message || 'Failed to update task');
+      toast.error(error.message || 'Failed to update Handl');
     }
   };
 
@@ -160,10 +160,10 @@ export function Dashboard({ tasks, session, onRefresh }: DashboardProps) {
         {totalTasks > 0 && (
           <div className="flex items-center gap-3 bg-background/50 backdrop-blur-sm border px-4 py-2.5 rounded-xl shadow-sm">
             <div className="flex flex-col text-right">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Focus Streak</span>
+              <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Handl Streak</span>
               <span className="text-sm font-bold flex items-center gap-1 justify-end">
                 <Flame className="h-4 w-4 text-orange-500 fill-orange-500" />
-                {completedTasks} completed
+                {completedTasks} handled
               </span>
             </div>
             <div className="h-8 w-[1px] bg-border" />
@@ -180,7 +180,7 @@ export function Dashboard({ tasks, session, onRefresh }: DashboardProps) {
         {/* Left Side: Actions & Focus (8 Columns) */}
         <div className="lg:col-span-8 space-y-8">
           
-          {/* Quick Capture Inbox Form */}
+           {/* Quick Capture Inbox Form */}
           <Card className="border shadow-sm overflow-hidden bg-card/65 backdrop-blur-sm">
             <CardHeader className="pb-3">
               <CardTitle className="text-base font-bold flex items-center gap-2">
@@ -188,7 +188,7 @@ export function Dashboard({ tasks, session, onRefresh }: DashboardProps) {
                 Quick Capture
               </CardTitle>
               <CardDescription className="text-xs">
-                Dump your thoughts instantly. Captured tasks go straight to your Task List.
+                Dump your thoughts instantly. Captured Handls go straight to your Task List.
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -197,7 +197,7 @@ export function Dashboard({ tasks, session, onRefresh }: DashboardProps) {
                   type="text"
                   value={quickTitle}
                   onChange={(e) => setQuickTitle(e.target.value)}
-                  placeholder="Type something to get it off your mind..."
+                  placeholder="Type something to handle it later..."
                   className="flex-1 bg-background/80 border rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all shadow-inner"
                   disabled={isCapturing}
                 />
@@ -226,10 +226,10 @@ export function Dashboard({ tasks, session, onRefresh }: DashboardProps) {
                 <div>
                   <CardTitle className="text-lg font-bold flex items-center gap-2">
                     <Flame className="h-5 w-5 text-primary" />
-                    Focus of the Day
+                    Today's Handls
                   </CardTitle>
                   <CardDescription className="text-xs">
-                    Your highest priority and most urgent tasks to complete today.
+                    Your highest priority and most urgent Handls to complete today.
                   </CardDescription>
                 </div>
                 <span className="text-[10px] font-bold uppercase tracking-wider bg-primary/10 text-primary px-2.5 py-1 rounded-full border border-primary/20">
@@ -293,7 +293,7 @@ export function Dashboard({ tasks, session, onRefresh }: DashboardProps) {
                   </div>
                   <h4 className="font-bold text-sm">Clear Mind, Safe Focus</h4>
                   <p className="text-xs text-muted-foreground max-w-xs mt-1">
-                    No critical or urgent tasks pending! Capture new notes or take a moment of rest.
+                    No critical or urgent Handls pending! Capture new notes or take a moment of rest.
                   </p>
                 </div>
               )}

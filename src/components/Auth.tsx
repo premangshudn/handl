@@ -92,7 +92,7 @@ export function Auth({ mode = 'auth', onResetSuccess }: AuthProps) {
     if (mode === 'reset') return 'Set New Password';
     if (view === 'forgot') return 'Forgot Password';
     if (view === 'register') return 'Create an Account';
-    return 'Welcome to TaskFlow';
+    return 'Welcome to Handl';
   };
 
   const getCardDescription = () => {
