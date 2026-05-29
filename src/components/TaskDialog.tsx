@@ -157,7 +157,18 @@ export function TaskDialog({ task, open, onOpenChange, onRefresh, defaultStatus 
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
+      <DialogContent 
+        className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto"
+        onOpenAutoFocus={(e) => {
+          const isMobileTouch = typeof window !== 'undefined' && (
+            window.matchMedia('(pointer: coarse)').matches || 
+            window.matchMedia('(max-width: 768px)').matches
+          );
+          if (isMobileTouch) {
+            e.preventDefault();
+          }
+        }}
+      >
         <DialogHeader>
           <DialogTitle>{task ? 'Edit Handl' : 'Create New Handl'}</DialogTitle>
         </DialogHeader>

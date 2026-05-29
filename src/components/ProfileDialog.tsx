@@ -243,7 +243,18 @@ export function ProfileDialog({ open, onOpenChange, user, onUpdate }: ProfileDia
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[420px] rounded-2xl overflow-y-auto max-h-[90vh]">
+      <DialogContent 
+        className="sm:max-w-[420px] rounded-2xl overflow-y-auto max-h-[90vh]"
+        onOpenAutoFocus={(e) => {
+          const isMobileTouch = typeof window !== 'undefined' && (
+            window.matchMedia('(pointer: coarse)').matches || 
+            window.matchMedia('(max-width: 768px)').matches
+          );
+          if (isMobileTouch) {
+            e.preventDefault();
+          }
+        }}
+      >
         <DialogHeader>
           <DialogTitle className="text-xl font-bold">Edit Profile</DialogTitle>
         </DialogHeader>
