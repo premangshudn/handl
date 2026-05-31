@@ -103,7 +103,7 @@ export function Auth({ mode = 'auth', onResetSuccess }: AuthProps) {
   };
 
   return (
-    <div className="flex min-h-screen items-start sm:items-center justify-center bg-muted/30 p-4 pt-12 sm:pt-4">
+    <div className="fixed inset-0 flex items-start sm:items-center justify-center bg-muted/30 p-4 pt-8 sm:pt-4 overflow-hidden">
       <Card className="w-full max-w-md shadow-xl border rounded-2xl bg-card/80 backdrop-blur-sm">
         <CardHeader className="space-y-2 p-4 sm:p-6 pb-4 sm:pb-6 border-b">
           <div className="hidden sm:flex justify-center pb-2">
