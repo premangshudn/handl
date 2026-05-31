@@ -42,36 +42,33 @@ export function TaskList({ tasks, onTaskClick, onRefresh, onTagClick }: TaskList
     setDragOverIndex(index);
   };
 
-  const handleDrop = async (e: React.DragEvent, targetIndex: number) => {
-    e.preventDefault();
-    if (draggedIndex === null || draggedIndex === targetIndex) return;
-
+  const executeDrop = async (dragIndex: number, targetIdx: number) => {
     let newPosition = 0.0;
     
-    if (targetIndex === 0) {
+    if (targetIdx === 0) {
       // Dropping at the very top: subtract spacing from the first item
       const firstPos = tasks[0].position || 0.0;
       newPosition = firstPos - 1000.0;
-    } else if (targetIndex === tasks.length - 1) {
+    } else if (targetIdx === tasks.length - 1) {
       // Dropping at the very bottom: add spacing to the last item
       const lastPos = tasks[tasks.length - 1].position || 0.0;
       newPosition = lastPos + 1000.0;
     } else {
       // Dropping in the middle
-      if (targetIndex < draggedIndex) {
+      if (targetIdx < dragIndex) {
         // Dragging upwards: place between targetIndex - 1 and targetIndex
-        const prevPos = tasks[targetIndex - 1].position || 0.0;
-        const nextPos = tasks[targetIndex].position || 0.0;
+        const prevPos = tasks[targetIdx - 1].position || 0.0;
+        const nextPos = tasks[targetIdx].position || 0.0;
         newPosition = (prevPos + nextPos) / 2.0;
       } else {
         // Dragging downwards: place between targetIndex and targetIndex + 1
-        const prevPos = tasks[targetIndex].position || 0.0;
-        const nextPos = tasks[targetIndex + 1].position || 0.0;
+        const prevPos = tasks[targetIdx].position || 0.0;
+        const nextPos = tasks[targetIdx + 1].position || 0.0;
         newPosition = (prevPos + nextPos) / 2.0;
       }
     }
 
-    const draggedTask = tasks[draggedIndex];
+    const draggedTask = tasks[dragIndex];
     
     try {
       const { error } = await supabase
@@ -85,10 +82,47 @@ export function TaskList({ tasks, onTaskClick, onRefresh, onTagClick }: TaskList
     } catch (err: any) {
       console.error('Failed to reorder handl:', err);
       toast.error('Failed to save manual sort order');
-    } finally {
-      setDraggedIndex(null);
-      setDragOverIndex(null);
     }
+  };
+
+  const handleDrop = async (e: React.DragEvent, targetIndex: number) => {
+    e.preventDefault();
+    if (draggedIndex === null || draggedIndex === targetIndex) return;
+
+    await executeDrop(draggedIndex, targetIndex);
+    setDraggedIndex(null);
+    setDragOverIndex(null);
+  };
+
+  const handleTouchStart = (index: number) => {
+    setDraggedIndex(index);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (draggedIndex === null) return;
+    
+    const touch = e.touches[0];
+    const element = document.elementFromPoint(touch.clientX, touch.clientY);
+    const row = element?.closest('tr');
+    
+    if (row) {
+      const targetIndex = Number(row.getAttribute('data-index'));
+      if (!isNaN(targetIndex) && targetIndex !== dragOverIndex && targetIndex !== draggedIndex) {
+        setDragOverIndex(targetIndex);
+      }
+    }
+  };
+
+  const handleTouchEnd = async () => {
+    if (draggedIndex === null) return;
+    const targetIndex = dragOverIndex;
+    
+    if (targetIndex !== null && targetIndex !== draggedIndex) {
+      await executeDrop(draggedIndex, targetIndex);
+    }
+    
+    setDraggedIndex(null);
+    setDragOverIndex(null);
   };
   const priorityColors = {
     Critical: 'bg-red-100 text-red-700 border-red-200 dark:bg-red-950/40 dark:text-red-300 dark:border-red-900/50',
@@ -144,7 +178,7 @@ export function TaskList({ tasks, onTaskClick, onRefresh, onTagClick }: TaskList
       <Table>
         <TableHeader className="bg-muted/50">
           <TableRow>
-            <TableHead className="w-[30px] hidden md:table-cell"></TableHead>
+            <TableHead className="w-[30px]"></TableHead>
             <TableHead className="w-[50px]"></TableHead>
             <TableHead className="w-[380px]">Handl</TableHead>
             <TableHead>Status</TableHead>
@@ -179,7 +213,12 @@ export function TaskList({ tasks, onTaskClick, onRefresh, onTagClick }: TaskList
                 onDragOver={(e) => handleDragOver(e, index)}
                 onDrop={(e) => handleDrop(e, index)}
               >
-                <TableCell className="py-3 pl-3 pr-0 text-muted-foreground/35 hidden md:table-cell cursor-grab active:cursor-grabbing">
+                <TableCell 
+                  className="py-3 pl-3 pr-0 text-muted-foreground/35 cursor-grab active:cursor-grabbing touch-none select-none"
+                  onTouchStart={() => handleTouchStart(index)}
+                  onTouchMove={handleTouchMove}
+                  onTouchEnd={handleTouchEnd}
+                >
                   <GripVertical className="h-4 w-4" />
                 </TableCell>
                 <TableCell className="py-3 pl-4 pr-0">
