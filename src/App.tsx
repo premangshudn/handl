@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 import type { Task } from '@/lib/supabase';
 import { Auth } from '@/components/Auth';
@@ -24,6 +24,10 @@ export default function App() {
   const [isRecovering, setIsRecovering] = useState(false);
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
 
+  // Keep track of latest state to avoid stale closures in onAuthStateChange
+  const stateRef = useRef({ loading, session });
+  stateRef.current = { loading, session };
+
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
@@ -32,8 +36,19 @@ export default function App() {
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((event, session) => {
-      setSession(session);
+    } = supabase.auth.onAuthStateChange((event, newSession) => {
+      const { loading: currentLoading, session: currentSession } = stateRef.current;
+
+      if (event === 'SIGNED_IN' && !currentLoading && !currentSession) {
+        // Delay slightly on manual sign-in to allow mobile password managers (iCloud Keychain)
+        // to prompt the user to save credentials before the form is unmounted from the DOM.
+        setTimeout(() => {
+          setSession(newSession);
+        }, 800);
+      } else {
+        setSession(newSession);
+      }
+
       if (event === 'PASSWORD_RECOVERY') {
         setIsRecovering(true);
       }

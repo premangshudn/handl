@@ -103,10 +103,10 @@ export function Auth({ mode = 'auth', onResetSuccess }: AuthProps) {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-muted/30 p-4">
+    <div className="flex min-h-screen items-start sm:items-center justify-center bg-muted/30 p-4 pt-12 sm:pt-4">
       <Card className="w-full max-w-md shadow-xl border rounded-2xl bg-card/80 backdrop-blur-sm">
-        <CardHeader className="space-y-2 pb-6 border-b">
-          <div className="flex justify-center pb-2">
+        <CardHeader className="space-y-2 p-4 sm:p-6 pb-4 sm:pb-6 border-b">
+          <div className="hidden sm:flex justify-center pb-2">
             <div className="bg-primary/10 p-3 rounded-2xl border border-primary/20 text-primary animate-pulse">
               {mode === 'reset' ? <KeyRound className="h-6 w-6" /> : <ShieldCheck className="h-6 w-6" />}
             </div>
@@ -119,7 +119,7 @@ export function Auth({ mode = 'auth', onResetSuccess }: AuthProps) {
           </CardDescription>
         </CardHeader>
         <form onSubmit={handleAuth}>
-          <CardContent className="space-y-4 pt-6">
+          <CardContent className="space-y-4 p-4 sm:p-6 pt-4 sm:pt-6">
             
             {/* Email Field (Hidden in reset mode) */}
             {mode !== 'reset' && (
@@ -241,7 +241,7 @@ export function Auth({ mode = 'auth', onResetSuccess }: AuthProps) {
             )}
 
           </CardContent>
-          <CardFooter className="flex flex-col space-y-4 pt-2">
+          <CardFooter className="flex flex-col space-y-4 p-4 sm:p-6 pt-2 sm:pt-2">
             <Button className="w-full rounded-xl font-bold py-2 shadow-md" type="submit" disabled={loading || (view !== 'forgot' && (view === 'register' || mode === 'reset') && !isPasswordValid)}>
               {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               {mode === 'reset' ? 'Update Password' : view === 'forgot' ? 'Send Reset Link' : view === 'register' ? 'Register' : 'Login'}
