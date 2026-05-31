@@ -100,13 +100,16 @@ export function Dashboard({ tasks, session, onRefresh }: DashboardProps) {
       const { data: userData } = await supabase.auth.getUser();
       if (!userData.user) throw new Error('User session not found');
 
+      const minPosition = tasks.length > 0 ? Math.min(...tasks.map(t => t.position || 0.0)) : 0.0;
+
       const { error } = await supabase
         .from('tasks')
         .insert([{
           title: quickTitle.trim(),
           status: 'Todo',
           priority: 'Medium',
-          assigned_to: userData.user.id
+          assigned_to: userData.user.id,
+          position: minPosition - 1000.0
         }]);
 
       if (error) throw error;

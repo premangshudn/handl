@@ -53,9 +53,10 @@ interface TaskDialogProps {
   onOpenChange: (open: boolean) => void;
   onRefresh: () => void;
   defaultStatus?: Task['status'];
+  minPosition?: number;
 }
 
-export function TaskDialog({ task, open, onOpenChange, onRefresh, defaultStatus }: TaskDialogProps) {
+export function TaskDialog({ task, open, onOpenChange, onRefresh, defaultStatus, minPosition }: TaskDialogProps) {
   const form = useForm<TaskFormValues>({
     resolver: zodResolver(taskSchema),
     defaultValues: {
@@ -121,6 +122,7 @@ export function TaskDialog({ task, open, onOpenChange, onRefresh, defaultStatus 
           due_date: values.due_date ? new Date(values.due_date).toISOString() : null,
           tags: values.tags ? values.tags.split(',').map(t => t.trim()) : [],
           assigned_to: userData.user.id, // Set initial assignee to creator
+          position: typeof minPosition === 'number' ? minPosition - 1000.0 : 0.0,
         };
 
         const { error } = await supabase

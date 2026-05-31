@@ -58,13 +58,34 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    if (session) {
-      fetchTasks();
-      const preferredView = session.user.user_metadata?.default_view as ViewType;
-      if (preferredView && ['dashboard', 'kanban', 'list'].includes(preferredView)) {
-        setActiveView(preferredView);
-      }
+    if (!session?.user?.id) return;
+
+    fetchTasks();
+    const preferredView = session.user.user_metadata?.default_view as ViewType;
+    if (preferredView && ['dashboard', 'kanban', 'list'].includes(preferredView)) {
+      setActiveView(preferredView);
     }
+
+    // Subscribe to realtime database changes on tasks table for active user
+    const channel = supabase
+      .channel('tasks-realtime-sync')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'tasks',
+          filter: `assigned_to=eq.${session.user.id}`,
+        },
+        () => {
+          fetchTasks(); // Refetch automatically when tasks are added/modified on any device
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [session]);
 
   const handleProfileUpdate = async () => {
@@ -96,6 +117,7 @@ export default function App() {
         .from('tasks')
         .select('*')
         .eq('assigned_to', session.user.id)
+        .order('position', { ascending: true })
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -199,6 +221,7 @@ export default function App() {
         task={selectedTask}
         defaultStatus={defaultStatus}
         onRefresh={fetchTasks}
+        minPosition={tasks.length > 0 ? Math.min(...tasks.map(t => t.position || 0.0)) : 0.0}
       />
       
       <Toaster position="top-right" closeButton richColors />

@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { 
   Table, 
   TableBody, 
@@ -10,7 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/lib/supabase';
 import type { Task } from '@/lib/supabase';
 import { format, isBefore, startOfDay } from 'date-fns';
-import { Clock, Trash2, CheckCircle2, Circle } from 'lucide-react';
+import { Clock, Trash2, CheckCircle2, Circle, GripVertical } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 
@@ -22,6 +23,73 @@ interface TaskListProps {
 }
 
 export function TaskList({ tasks, onTaskClick, onRefresh, onTagClick }: TaskListProps) {
+  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
+
+  const handleDragStart = (e: React.DragEvent, index: number) => {
+    setDraggedIndex(index);
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleDragEnd = () => {
+    setDraggedIndex(null);
+    setDragOverIndex(null);
+  };
+
+  const handleDragOver = (e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    if (draggedIndex === null || draggedIndex === index) return;
+    setDragOverIndex(index);
+  };
+
+  const handleDrop = async (e: React.DragEvent, targetIndex: number) => {
+    e.preventDefault();
+    if (draggedIndex === null || draggedIndex === targetIndex) return;
+
+    let newPosition = 0.0;
+    
+    if (targetIndex === 0) {
+      // Dropping at the very top: subtract spacing from the first item
+      const firstPos = tasks[0].position || 0.0;
+      newPosition = firstPos - 1000.0;
+    } else if (targetIndex === tasks.length - 1) {
+      // Dropping at the very bottom: add spacing to the last item
+      const lastPos = tasks[tasks.length - 1].position || 0.0;
+      newPosition = lastPos + 1000.0;
+    } else {
+      // Dropping in the middle
+      if (targetIndex < draggedIndex) {
+        // Dragging upwards: place between targetIndex - 1 and targetIndex
+        const prevPos = tasks[targetIndex - 1].position || 0.0;
+        const nextPos = tasks[targetIndex].position || 0.0;
+        newPosition = (prevPos + nextPos) / 2.0;
+      } else {
+        // Dragging downwards: place between targetIndex and targetIndex + 1
+        const prevPos = tasks[targetIndex].position || 0.0;
+        const nextPos = tasks[targetIndex + 1].position || 0.0;
+        newPosition = (prevPos + nextPos) / 2.0;
+      }
+    }
+
+    const draggedTask = tasks[draggedIndex];
+    
+    try {
+      const { error } = await supabase
+        .from('tasks')
+        .update({ position: newPosition })
+        .eq('id', draggedTask.id);
+      
+      if (error) throw error;
+      toast.success('Handl reordered successfully!');
+      if (onRefresh) onRefresh();
+    } catch (err: any) {
+      console.error('Failed to reorder handl:', err);
+      toast.error('Failed to save manual sort order');
+    } finally {
+      setDraggedIndex(null);
+      setDragOverIndex(null);
+    }
+  };
   const priorityColors = {
     Critical: 'bg-red-100 text-red-700 border-red-200 dark:bg-red-950/40 dark:text-red-300 dark:border-red-900/50',
     High: 'bg-orange-100 text-orange-700 border-orange-200 dark:bg-orange-950/40 dark:text-orange-300 dark:border-orange-900/50',
@@ -76,6 +144,7 @@ export function TaskList({ tasks, onTaskClick, onRefresh, onTagClick }: TaskList
       <Table>
         <TableHeader className="bg-muted/50">
           <TableRow>
+            <TableHead className="w-[30px] hidden md:table-cell"></TableHead>
             <TableHead className="w-[50px]"></TableHead>
             <TableHead className="w-[380px]">Handl</TableHead>
             <TableHead>Status</TableHead>
@@ -85,18 +154,34 @@ export function TaskList({ tasks, onTaskClick, onRefresh, onTagClick }: TaskList
           </TableRow>
         </TableHeader>
         <TableBody>
-          {tasks.map((task) => {
+          {tasks.map((task, index) => {
             const isCompleted = task.status === 'Done';
             const isOverdue = task.due_date && 
               !isCompleted && 
               isBefore(new Date(task.due_date), startOfDay(new Date()));
 
+            const isDragOver = index === dragOverIndex;
+            const isDragging = index === draggedIndex;
+
             return (
               <TableRow 
                 key={task.id} 
-                className={`cursor-pointer hover:bg-muted/30 group transition-colors ${isCompleted ? 'opacity-70' : ''}`}
+                data-index={index}
+                className={`cursor-pointer hover:bg-muted/30 group transition-all duration-200 ${
+                  isCompleted ? 'opacity-70' : ''
+                } ${isDragging ? 'opacity-30 bg-muted/20 border-dashed' : ''} ${
+                  isDragOver ? 'bg-primary/5 border-l-4 border-l-primary/60 scale-[0.99] shadow-inner' : ''
+                }`}
                 onClick={() => onTaskClick(task)}
+                draggable
+                onDragStart={(e) => handleDragStart(e, index)}
+                onDragEnd={handleDragEnd}
+                onDragOver={(e) => handleDragOver(e, index)}
+                onDrop={(e) => handleDrop(e, index)}
               >
+                <TableCell className="py-3 pl-3 pr-0 text-muted-foreground/35 hidden md:table-cell cursor-grab active:cursor-grabbing">
+                  <GripVertical className="h-4 w-4" />
+                </TableCell>
                 <TableCell className="py-3 pl-4 pr-0">
                   <button
                     onClick={(e) => handleToggleComplete(e, task)}
@@ -169,7 +254,7 @@ export function TaskList({ tasks, onTaskClick, onRefresh, onTagClick }: TaskList
           })}
           {tasks.length === 0 && (
             <TableRow>
-              <TableCell colSpan={6} className="h-32 text-center text-muted-foreground">
+              <TableCell colSpan={7} className="h-32 text-center text-muted-foreground">
                 No handls found. Create one to get started!
               </TableCell>
             </TableRow>

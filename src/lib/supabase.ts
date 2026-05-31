@@ -20,6 +20,7 @@ export type Task = {
   updated_at: string;
   assigned_to: string | null;
   tags: string[];
+  position: number;
 };
 
 export type Comment = {
