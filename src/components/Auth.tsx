@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
-import { Loader2, ArrowLeft, KeyRound, Mail, Lock, ShieldCheck, Eye, EyeOff, Fingerprint } from 'lucide-react';
+import { Loader2, ArrowLeft, KeyRound, Mail, Lock, ShieldCheck, Eye, EyeOff } from 'lucide-react';
 
 interface AuthProps {
   mode?: 'auth' | 'reset';
@@ -22,25 +22,6 @@ export function Auth({ mode = 'auth', onResetSuccess }: AuthProps) {
   const [view, setView] = useState<ViewState>('login');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [isAuthenticatingBiometric, setIsAuthenticatingBiometric] = useState(false);
-
-  const handleBiometricSignIn = async () => {
-    setIsAuthenticatingBiometric(true);
-    try {
-      const { error } = await (supabase.auth as any).passkey.signIn();
-      if (error) throw error;
-      toast.success('Logged in successfully!');
-    } catch (error: any) {
-      console.error('Biometric authentication error:', error);
-      if (error.message?.includes('cancelled') || error.message?.includes('abort') || error.name === 'AbortError') {
-        toast('Biometric prompt dismissed.');
-      } else {
-        toast.error(error.message || 'Failed to sign in with biometrics. Ensure you have registered this device in settings.');
-      }
-    } finally {
-      setIsAuthenticatingBiometric(false);
-    }
-  };
 
   // Real-time password rules validation
   const isMinLength = password.length >= 8;
@@ -261,33 +242,10 @@ export function Auth({ mode = 'auth', onResetSuccess }: AuthProps) {
 
           </CardContent>
           <CardFooter className="flex flex-col space-y-4 pt-2">
-            <div className="flex gap-2 w-full">
-              <Button 
-                className="flex-1 rounded-xl font-bold py-2 shadow-md" 
-                type="submit" 
-                disabled={loading || isAuthenticatingBiometric || (view !== 'forgot' && (view === 'register' || mode === 'reset') && !isPasswordValid)}
-              >
-                {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                {mode === 'reset' ? 'Update Password' : view === 'forgot' ? 'Send Reset Link' : view === 'register' ? 'Register' : 'Login'}
-              </Button>
-              
-              {mode === 'auth' && view === 'login' && (
-                <Button
-                  type="button"
-                  variant="outline"
-                  disabled={loading || isAuthenticatingBiometric}
-                  onClick={handleBiometricSignIn}
-                  className="rounded-xl border shadow-sm px-3.5 bg-background/50 hover:bg-background transition-all hover:border-primary/20 cursor-pointer shrink-0"
-                  title="Sign in with Fingerprint or Face ID"
-                >
-                  {isAuthenticatingBiometric ? (
-                    <Loader2 className="h-4 w-4 animate-spin text-primary" />
-                  ) : (
-                    <Fingerprint className="h-4 w-4 text-primary" />
-                  )}
-                </Button>
-              )}
-            </div>
+            <Button className="w-full rounded-xl font-bold py-2 shadow-md" type="submit" disabled={loading || (view !== 'forgot' && (view === 'register' || mode === 'reset') && !isPasswordValid)}>
+              {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {mode === 'reset' ? 'Update Password' : view === 'forgot' ? 'Send Reset Link' : view === 'register' ? 'Register' : 'Login'}
+            </Button>
             
             {/* View switching logic */}
             {mode === 'auth' && (

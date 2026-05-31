@@ -198,7 +198,7 @@ export function Dashboard({ tasks, session, onRefresh }: DashboardProps) {
                   value={quickTitle}
                   onChange={(e) => setQuickTitle(e.target.value)}
                   placeholder="Type to handle it later..."
-                  className="flex-1 bg-background/80 border rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all shadow-inner"
+                  className="flex-1 bg-background/80 border rounded-xl px-4 py-2 text-base md:text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all shadow-inner"
                   disabled={isCapturing}
                 />
                 <button

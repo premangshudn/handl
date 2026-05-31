@@ -31,7 +31,7 @@ import {
 import { Avatar, AvatarImage } from '@/components/ui/avatar';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
-import { Loader2, Camera, Sparkles, Fingerprint } from 'lucide-react';
+import { Loader2, Camera, Sparkles } from 'lucide-react';
 import type { User as SupabaseUser } from '@supabase/supabase-js';
 
 const profileSchema = z.object({
@@ -57,22 +57,6 @@ export function ProfileDialog({ open, onOpenChange, user, onUpdate }: ProfileDia
   const [offsetY, setOffsetY] = useState(0);
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [isRegisteringPasskey, setIsRegisteringPasskey] = useState(false);
-
-  const handleRegisterPasskey = async () => {
-    if (!user) return;
-    setIsRegisteringPasskey(true);
-    try {
-      const { error } = await (supabase.auth as any).passkey.register();
-      if (error) throw error;
-      toast.success('Biometric login enabled! You can now sign in using Face ID / Touch ID.');
-    } catch (error: any) {
-      console.error('Passkey registration error:', error);
-      toast.error(error.message || 'Failed to register biometric login. Make sure your browser and device support biometrics/Passkeys.');
-    } finally {
-      setIsRegisteringPasskey(false);
-    }
-  };
 
   const handleDeleteAccount = async () => {
     if (!user) return;
@@ -443,40 +427,7 @@ export function ProfileDialog({ open, onOpenChange, user, onUpdate }: ProfileDia
               )}
             />
 
-            {/* Biometric Credentials Setup */}
-            <div className="border-t border-muted pt-4 mt-6">
-              <div className="bg-muted/30 border border-muted/50 rounded-xl p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                <div className="space-y-0.5">
-                  <p className="text-[11px] font-bold text-foreground flex items-center gap-1.5">
-                    <Fingerprint className="h-4 w-4 text-primary" />
-                    Biometric Login (Passkeys)
-                  </p>
-                  <p className="text-[10px] text-muted-foreground leading-snug">
-                    Link your device's Touch ID / Face ID to log in securely without entering passwords.
-                  </p>
-                </div>
-                <Button 
-                  type="button" 
-                  variant="outline" 
-                  size="sm"
-                  disabled={isSaving || isDeleting || isRegisteringPasskey}
-                  onClick={handleRegisterPasskey}
-                  className="rounded-xl font-bold text-xs shrink-0 bg-background/50 hover:bg-background shadow-sm hover:border-primary/20 transition-all gap-1.5"
-                >
-                  {isRegisteringPasskey ? (
-                    <>
-                      <Loader2 className="h-3 w-3 animate-spin" />
-                      Registering...
-                    </>
-                  ) : (
-                    <>
-                      <Fingerprint className="h-3.5 w-3.5" />
-                      Enable Biometrics
-                    </>
-                  )}
-                </Button>
-              </div>
-            </div>
+
 
             {/* Danger Zone */}
             <div className="border-t border-red-500/20 pt-4 mt-6">
