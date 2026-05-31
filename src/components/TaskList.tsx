@@ -101,6 +101,11 @@ export function TaskList({ tasks, onTaskClick, onRefresh, onTagClick }: TaskList
   const handleTouchMove = (e: React.TouchEvent) => {
     if (draggedIndex === null) return;
     
+    // Lock page scrolling strictly while dragging the grip handle
+    if (e.cancelable) {
+      e.preventDefault();
+    }
+    
     const touch = e.touches[0];
     const element = document.elementFromPoint(touch.clientX, touch.clientY);
     const row = element?.closest('tr');
@@ -215,9 +220,18 @@ export function TaskList({ tasks, onTaskClick, onRefresh, onTagClick }: TaskList
               >
                 <TableCell 
                   className="py-3 pl-3 pr-0 text-muted-foreground/35 cursor-grab active:cursor-grabbing touch-none select-none"
-                  onTouchStart={() => handleTouchStart(index)}
+                  onTouchStart={(e) => {
+                    e.stopPropagation();
+                    handleTouchStart(index);
+                  }}
                   onTouchMove={handleTouchMove}
-                  onTouchEnd={handleTouchEnd}
+                  onTouchEnd={(e) => {
+                    e.stopPropagation();
+                    handleTouchEnd();
+                  }}
+                  onClick={(e) => {
+                    e.stopPropagation(); // Stops touch-click from opening the edit task dialog!
+                  }}
                 >
                   <GripVertical className="h-4 w-4" />
                 </TableCell>
