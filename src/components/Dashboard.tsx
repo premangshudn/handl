@@ -197,21 +197,21 @@ export function Dashboard({ tasks, session, onRefresh }: DashboardProps) {
                   type="text"
                   value={quickTitle}
                   onChange={(e) => setQuickTitle(e.target.value)}
-                  placeholder="Type something to handle it later..."
+                  placeholder="Type to handle it later..."
                   className="flex-1 bg-background/80 border rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all shadow-inner"
                   disabled={isCapturing}
                 />
                 <button
                   type="submit"
                   disabled={!quickTitle.trim() || isCapturing}
-                  className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-4 py-2 rounded-xl text-sm flex items-center gap-1.5 transition-all shadow-md active:scale-95 disabled:opacity-50 disabled:pointer-events-none"
+                  className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-3 sm:px-4 py-2 rounded-xl text-sm flex items-center gap-1.5 transition-all shadow-md active:scale-95 disabled:opacity-50 disabled:pointer-events-none"
                 >
                   {isCapturing ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
+                     <Loader2 className="h-4 w-4 animate-spin" />
                   ) : (
                     <>
                       <Send className="h-3.5 w-3.5" />
-                      <span>Capture</span>
+                      <span className="hidden sm:inline">Capture</span>
                     </>
                   )}
                 </button>
@@ -232,9 +232,6 @@ export function Dashboard({ tasks, session, onRefresh }: DashboardProps) {
                     Your highest priority and most urgent Handls to complete today.
                   </CardDescription>
                 </div>
-                <span className="text-[10px] font-bold uppercase tracking-wider bg-primary/10 text-primary px-2.5 py-1 rounded-full border border-primary/20">
-                  {focusTasks.length} Pinned
-                </span>
               </div>
             </CardHeader>
             <CardContent className="pt-6">

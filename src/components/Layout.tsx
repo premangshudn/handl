@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -35,6 +35,22 @@ interface LayoutProps {
 export function Layout({ children, session, activeView, setActiveView, onAddTask, onProfileUpdate }: LayoutProps) {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
 
+  useEffect(() => {
+    const handleFocusOut = (e: FocusEvent) => {
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
+        // Reset window scroll offset to (0, 0) to fix iOS layout shift bugs on keyboard dismissal
+        setTimeout(() => {
+          window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
+        }, 60);
+      }
+    };
+
+    document.addEventListener('focusout', handleFocusOut);
+    return () => {
+      document.removeEventListener('focusout', handleFocusOut);
+    };
+  }, []);
+
   const handleLogout = async () => {
     const { error } = await supabase.auth.signOut();
     if (error) toast.error(error.message);
@@ -55,7 +71,7 @@ export function Layout({ children, session, activeView, setActiveView, onAddTask
   ] as const;
 
   return (
-    <div className="flex h-screen bg-background">
+    <div className="flex h-screen h-[100dvh] bg-background w-full overflow-hidden">
       {/* Sidebar */}
       <aside className="w-64 border-r bg-muted/30 hidden md:flex flex-col">
         <div className="p-6 flex items-center gap-2">
