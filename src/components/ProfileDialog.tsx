@@ -385,9 +385,13 @@ export function ProfileDialog({ open, onOpenChange, user, onUpdate }: ProfileDia
               render={({ field }) => (
                 <FormItem>
                   <FormLabel className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Default Landing View</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
+                  <Select 
+                    onValueChange={field.onChange} 
+                    defaultValue="dashboard"
+                    value={field.value || 'dashboard'}
+                  >
                     <FormControl>
-                      <SelectTrigger className="rounded-xl">
+                      <SelectTrigger className="rounded-xl w-60 max-w-full">
                         <SelectValue placeholder="Select view" />
                       </SelectTrigger>
                     </FormControl>

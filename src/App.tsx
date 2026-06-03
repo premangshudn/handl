@@ -192,7 +192,7 @@ export default function App() {
         onAddTask={() => handleAddTask()}
         onProfileUpdate={handleProfileUpdate}
       >
-        <div className="max-w-7xl mx-auto h-full">
+        <div className="max-w-7xl mx-auto min-h-full">
           {activeView !== 'dashboard' && selectedTag && (
             <div className="flex items-center gap-2 mb-6 bg-primary/5 hover:bg-primary/10 border border-primary/15 px-3.5 py-1.5 rounded-full w-fit transition-all animate-in fade-in slide-in-from-top-1 duration-200">
               <span className="text-xs font-semibold text-primary flex items-center gap-1">
