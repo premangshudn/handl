@@ -71,3 +71,23 @@ CREATE TRIGGER update_tasks_updated_at
     BEFORE UPDATE ON public.tasks
     FOR EACH ROW
     EXECUTE FUNCTION update_updated_at_column();
+
+-- 7. Secure Account Deletion RPC
+-- This function runs with SECURITY DEFINER to bypass standard auth restrictions
+-- allowing the currently authenticated user to delete their own account from auth.users.
+CREATE OR REPLACE FUNCTION delete_user_account()
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+    IF auth.uid() IS NULL THEN
+        RAISE EXCEPTION 'Not authenticated';
+    END IF;
+    
+    -- Cascade deletion will remove public.tasks and public.comments via foreign keys
+    DELETE FROM auth.users WHERE id = auth.uid();
+END;
+$$;
+

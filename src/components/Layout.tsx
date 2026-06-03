@@ -4,7 +4,6 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { 
   LayoutDashboard, 
-  Kanban, 
   List, 
   LogOut, 
   Plus,
@@ -26,8 +25,8 @@ import {
 interface LayoutProps {
   children: React.ReactNode;
   session: Session | null;
-  activeView: 'dashboard' | 'kanban' | 'list';
-  setActiveView: (view: 'dashboard' | 'kanban' | 'list') => void;
+  activeView: 'dashboard' | 'list';
+  setActiveView: (view: 'dashboard' | 'list') => void;
   onAddTask: () => void;
   onProfileUpdate: () => void;
 }
@@ -66,7 +65,6 @@ export function Layout({ children, session, activeView, setActiveView, onAddTask
 
   const navItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { id: 'kanban', label: 'Focus Board', icon: Kanban },
     { id: 'list', label: 'Handl List', icon: List },
   ] as const;
 

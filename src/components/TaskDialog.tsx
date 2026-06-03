@@ -31,21 +31,28 @@ import type { Task } from '@/lib/supabase';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
 import { Loader2, Trash2, Calendar as CalendarIcon } from 'lucide-react';
-import { format } from 'date-fns';
+import { format, startOfDay } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { 
+  mapDBPriorityToForm, 
+  mapFormPriorityToDB, 
+  mapDBStatusToForm, 
+  mapFormStatusToDB 
+} from '@/lib/taskUtils';
 
 const taskSchema = z.object({
-  title: z.string().min(1, 'Title is required'),
-  description: z.string().optional(),
-  priority: z.enum(['Low', 'Medium', 'High', 'Critical']),
-  status: z.enum(['Todo', 'In Progress', 'Done']),
+  title: z.string().min(1, 'Title is required').max(150, 'Title must be under 150 characters'),
+  description: z.string().max(3000, 'Description must be under 3000 characters').optional(),
+  priority: z.enum(['Later', 'Immediate']),
+  status: z.enum(['Pending', 'Done']),
   due_date: z.string().optional(),
   tags: z.string().optional(),
 });
 
 type TaskFormValues = z.infer<typeof taskSchema>;
+
 
 interface TaskDialogProps {
   task?: Task | null;
@@ -62,8 +69,8 @@ export function TaskDialog({ task, open, onOpenChange, onRefresh, defaultStatus,
     defaultValues: {
       title: '',
       description: '',
-      priority: 'Medium',
-      status: defaultStatus || 'Todo',
+      priority: 'Later',
+      status: defaultStatus ? mapDBStatusToForm(defaultStatus) : 'Pending',
       due_date: '',
       tags: '',
     },
@@ -74,17 +81,17 @@ export function TaskDialog({ task, open, onOpenChange, onRefresh, defaultStatus,
       form.reset({
         title: task.title,
         description: task.description || '',
-        priority: task.priority,
-        status: task.status,
-        due_date: task.due_date ? new Date(task.due_date).toISOString().split('T')[0] : '',
+        priority: mapDBPriorityToForm(task.priority),
+        status: mapDBStatusToForm(task.status),
+        due_date: task.due_date ? format(new Date(task.due_date), 'yyyy-MM-dd') : '',
         tags: task.tags?.join(', ') || '',
       });
     } else {
       form.reset({
         title: '',
         description: '',
-        priority: 'Medium',
-        status: defaultStatus || 'Todo',
+        priority: 'Later',
+        status: defaultStatus ? mapDBStatusToForm(defaultStatus) : 'Pending',
         due_date: '',
         tags: '',
       });
@@ -100,10 +107,10 @@ export function TaskDialog({ task, open, onOpenChange, onRefresh, defaultStatus,
         const updateData = {
           title: values.title,
           description: values.description,
-          priority: values.priority,
-          status: values.status,
-          due_date: values.due_date ? new Date(values.due_date).toISOString() : null,
-          tags: values.tags ? values.tags.split(',').map(t => t.trim()) : [],
+          priority: mapFormPriorityToDB(values.priority),
+          status: mapFormStatusToDB(values.status),
+          due_date: values.due_date ? new Date(values.due_date + 'T12:00:00').toISOString() : null,
+          tags: values.tags ? values.tags.split(',').map(t => t.trim()).filter(Boolean) : [],
           assigned_to: task.assigned_to, // Preserve original assignee
         };
 
@@ -117,10 +124,10 @@ export function TaskDialog({ task, open, onOpenChange, onRefresh, defaultStatus,
         const insertData = {
           title: values.title,
           description: values.description,
-          priority: values.priority,
-          status: values.status,
-          due_date: values.due_date ? new Date(values.due_date).toISOString() : null,
-          tags: values.tags ? values.tags.split(',').map(t => t.trim()) : [],
+          priority: mapFormPriorityToDB(values.priority),
+          status: mapFormStatusToDB(values.status),
+          due_date: values.due_date ? new Date(values.due_date + 'T12:00:00').toISOString() : null,
+          tags: values.tags ? values.tags.split(',').map(t => t.trim()).filter(Boolean) : [],
           assigned_to: userData.user.id, // Set initial assignee to creator
           position: typeof minPosition === 'number' ? minPosition - 1000.0 : 0.0,
         };
@@ -220,8 +227,7 @@ export function TaskDialog({ task, open, onOpenChange, onRefresh, defaultStatus,
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="Todo">Todo</SelectItem>
-                        <SelectItem value="In Progress">In Progress</SelectItem>
+                        <SelectItem value="Pending">Pending</SelectItem>
                         <SelectItem value="Done">Done</SelectItem>
                       </SelectContent>
                     </Select>
@@ -242,10 +248,8 @@ export function TaskDialog({ task, open, onOpenChange, onRefresh, defaultStatus,
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="Low">Low</SelectItem>
-                        <SelectItem value="Medium">Medium</SelectItem>
-                        <SelectItem value="High">High</SelectItem>
-                        <SelectItem value="Critical">Critical</SelectItem>
+                        <SelectItem value="Later">Later</SelectItem>
+                        <SelectItem value="Immediate">Immediate</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -272,7 +276,7 @@ export function TaskDialog({ task, open, onOpenChange, onRefresh, defaultStatus,
                           >
                             <span>
                               {field.value ? (
-                                format(new Date(field.value), "PPP")
+                                format(new Date(field.value + 'T12:00:00'), "PPP")
                               ) : (
                                 "Pick a date"
                               )}
@@ -284,9 +288,9 @@ export function TaskDialog({ task, open, onOpenChange, onRefresh, defaultStatus,
                       <PopoverContent className="w-auto p-0 rounded-2xl shadow-xl border bg-card" align="start">
                         <Calendar
                           mode="single"
-                          selected={field.value ? new Date(field.value) : undefined}
-                          onSelect={(date) => field.onChange(date ? date.toISOString() : "")}
-                          disabled={(date) => date < new Date("1900-01-01")}
+                          selected={field.value ? new Date(field.value + 'T12:00:00') : undefined}
+                          onSelect={(date) => field.onChange(date ? format(date, "yyyy-MM-dd") : "")}
+                          disabled={(date) => date < startOfDay(new Date())}
                           initialFocus
                           className="rounded-2xl"
                         />

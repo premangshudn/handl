@@ -150,3 +150,27 @@
     @apply bg-background text-foreground;
   }
 }
+
+@keyframes soft-glow {
+  0%, 100% {
+    opacity: 0.35;
+    transform: scale(0.9);
+    box-shadow: 0 0 4px var(--glow-color);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.15);
+    box-shadow: 0 0 12px var(--glow-color);
+  }
+}
+
+.animate-soft-glow-red {
+  --glow-color: rgba(239, 68, 68, 0.7);
+  animation: soft-glow 3s ease-in-out infinite;
+}
+
+.animate-soft-glow-amber {
+  --glow-color: rgba(245, 158, 11, 0.7);
+  animation: soft-glow 3s ease-in-out infinite;
+}
+

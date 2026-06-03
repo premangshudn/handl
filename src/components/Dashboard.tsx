@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { 
   CheckCircle2, 
@@ -8,36 +8,57 @@ import {
   Send,
   Flame,
   ArrowRight,
-  TrendingUp,
   Loader2
 } from 'lucide-react';
 import type { Task } from '@/lib/supabase';
 import { supabase } from '@/lib/supabase';
 import { isBefore, startOfDay } from 'date-fns';
 import { toast } from 'sonner';
-import { 
-  ResponsiveContainer, 
-  BarChart, 
-  Bar, 
-  XAxis, 
-  YAxis, 
-  Tooltip, 
-  Cell 
-} from 'recharts';
 import type { Session } from '@supabase/supabase-js';
+import { getFocusTasks } from '@/lib/taskUtils';
 
 interface DashboardProps {
   tasks: Task[];
   session: Session | null;
   onRefresh?: () => void;
+  onTaskClick?: (task: Task) => void;
 }
 
-export function Dashboard({ tasks, session, onRefresh }: DashboardProps) {
+export function Dashboard({ tasks, session, onRefresh, onTaskClick }: DashboardProps) {
   const [quickTitle, setQuickTitle] = useState('');
   const [isCapturing, setIsCapturing] = useState(false);
 
   const meta = session?.user?.user_metadata || {};
   const userEmail = session?.user?.email;
+
+  const [mantra, setMantra] = useState(meta.mantra || "Let's focus on what matters today. Take it one step at a time.");
+  const [isEditingMantra, setIsEditingMantra] = useState(false);
+  const [isSavingMantra, setIsSavingMantra] = useState(false);
+
+  useEffect(() => {
+    setMantra(meta.mantra || "Let's focus on what matters today. Take it one step at a time.");
+  }, [meta.mantra]);
+
+  const handleMantraBlur = async () => {
+    setIsEditingMantra(false);
+    const cleanMantra = mantra.trim();
+    if (cleanMantra === (meta.mantra || "Let's focus on what matters today. Take it one step at a time.")) return;
+    
+    setIsSavingMantra(true);
+    try {
+      const { error } = await supabase.auth.updateUser({
+        data: { mantra: cleanMantra }
+      });
+      if (error) throw error;
+      toast.success('Mantra updated!');
+      if (onRefresh) onRefresh();
+    } catch (err: any) {
+      toast.error('Failed to update mantra');
+      setMantra(meta.mantra || "Let's focus on what matters today. Take it one step at a time.");
+    } finally {
+      setIsSavingMantra(false);
+    }
+  };
 
   // 1. Mindful Greetings Logic
   const getGreeting = () => {
@@ -55,7 +76,7 @@ export function Dashboard({ tasks, session, onRefresh }: DashboardProps) {
     return rawName.charAt(0).toUpperCase() + rawName.slice(1);
   };
 
-  const displayMantra = meta.mantra || "Let's focus on what matters today. Take it one step at a time.";
+  // mantra text is managed via state to support direct inline editing
 
   // 2. Statistics Calculations
   const totalTasks = tasks.length;
@@ -71,24 +92,8 @@ export function Dashboard({ tasks, session, onRefresh }: DashboardProps) {
 
   const completionRate = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
 
-  // 3. Focus of the Day Logic (Top 3 tasks that are high priority or overdue or due today)
-  const focusTasks = tasks
-    .filter(t => t.status !== 'Done')
-    .sort((a, b) => {
-      // Sort priority: Critical > High > Medium > Low
-      const priorityWeights = { Critical: 4, High: 3, Medium: 2, Low: 1 };
-      const weightA = priorityWeights[a.priority] || 2;
-      const weightB = priorityWeights[b.priority] || 2;
-      
-      if (weightB !== weightA) return weightB - weightA;
-      
-      // Secondary sort: due date nearest first
-      if (a.due_date && b.due_date) return new Date(a.due_date).getTime() - new Date(b.due_date).getTime();
-      if (a.due_date) return -1;
-      if (b.due_date) return 1;
-      return 0;
-    })
-    .slice(0, 3);
+  // 3. Focus of the Day Logic (Top 3 tasks: Immediate or due today/overdue)
+  const focusTasks = getFocusTasks(tasks).slice(0, 3);
 
   // 4. Quick Capture Submit Handler
   const handleQuickCapture = async (e: React.FormEvent) => {
@@ -140,12 +145,7 @@ export function Dashboard({ tasks, session, onRefresh }: DashboardProps) {
     }
   };
 
-  // Chart data configuration with theme-independent high-contrast colors
-  const chartData = [
-    { name: 'Todo', count: tasks.filter(t => t.status === 'Todo').length, color: '#94a3b8' }, // Slate 400
-    { name: 'In Progress', count: tasks.filter(t => t.status === 'In Progress').length, color: '#3b82f6' }, // Blue 500
-    { name: 'Done', count: completedTasks, color: '#10b981' }, // Emerald 500
-  ];
+
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500 pb-8">
@@ -155,10 +155,35 @@ export function Dashboard({ tasks, session, onRefresh }: DashboardProps) {
           <h2 className="text-3xl font-extrabold tracking-tight bg-gradient-to-r from-foreground via-foreground/90 to-primary bg-clip-text text-transparent">
             {getGreeting()}, {getDisplayName()}
           </h2>
-          <p className="text-muted-foreground text-sm flex items-center gap-1.5">
-            <Sparkles className="h-4 w-4 text-primary animate-pulse" />
-            {displayMantra}
-          </p>
+          {isEditingMantra ? (
+            <input
+              type="text"
+              value={mantra}
+              onChange={(e) => setMantra(e.target.value)}
+              onBlur={handleMantraBlur}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') handleMantraBlur();
+                if (e.key === 'Escape') {
+                  setIsEditingMantra(false);
+                  setMantra(meta.mantra || "Let's focus on what matters today. Take it one step at a time.");
+                }
+              }}
+              autoFocus
+              className="text-muted-foreground text-sm bg-transparent border-b border-primary/45 focus:outline-none focus:border-primary w-full max-w-md py-0.5 animate-in fade-in duration-200"
+              maxLength={80}
+              disabled={isSavingMantra}
+            />
+          ) : (
+            <p 
+              onClick={() => setIsEditingMantra(true)}
+              className="text-muted-foreground text-sm flex items-center gap-1.5 cursor-pointer hover:text-foreground transition-colors group/mantra select-none"
+              title="Click to edit your daily mantra"
+            >
+              <Sparkles className="h-4 w-4 text-primary animate-pulse shrink-0" />
+              <span>{mantra}</span>
+              <span className="text-[10px] text-muted-foreground/0 group-hover/mantra:text-muted-foreground/50 transition-opacity ml-1 font-semibold select-none">(edit)</span>
+            </p>
+          )}
         </div>
         {totalTasks > 0 && (
           <div className="flex items-center gap-3 bg-background/50 backdrop-blur-sm border px-4 py-2.5 rounded-xl shadow-sm">
@@ -243,28 +268,59 @@ export function Dashboard({ tasks, session, onRefresh }: DashboardProps) {
                   {focusTasks.map(task => (
                     <div 
                       key={task.id} 
-                      className="group flex items-start gap-4 p-4 rounded-xl border bg-background/50 hover:bg-accent/30 hover:border-primary/20 transition-all shadow-sm"
+                      className="group flex items-start gap-4 p-4 rounded-xl border bg-background/50 hover:bg-accent/30 hover:border-primary/20 transition-all shadow-sm cursor-pointer"
+                      onClick={() => onTaskClick?.(task)}
                     >
                       <button
-                        onClick={() => handleToggleComplete(task.id)}
-                        className="mt-1 h-5 w-5 rounded-md border-2 border-muted-foreground/30 hover:border-primary flex items-center justify-center transition-all bg-background text-transparent hover:text-primary active:scale-90"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleToggleComplete(task.id);
+                        }}
+                        className="mt-1 h-5 w-5 rounded-md border-2 border-muted-foreground/30 hover:border-primary flex items-center justify-center transition-all bg-background text-transparent hover:text-primary active:scale-90 shrink-0"
                       >
                         <CheckCircle2 className="h-4 w-4 opacity-0 group-hover:opacity-40 transition-opacity" />
                       </button>
 
                       <div className="flex-1 space-y-1">
-                        <div className="flex items-center gap-2">
-                          <h4 className="font-semibold text-sm leading-none text-foreground group-hover:text-primary transition-colors">
-                            {task.title}
-                          </h4>
-                          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                            task.priority === 'Critical' ? 'bg-red-500/10 text-red-500 border border-red-500/20' :
-                            task.priority === 'High' ? 'bg-orange-500/10 text-orange-500 border border-orange-500/20' :
-                            task.priority === 'Medium' ? 'bg-blue-500/10 text-blue-500 border border-blue-500/20' :
-                            'bg-slate-500/10 text-slate-500 border border-slate-500/20'
-                          }`}>
-                            {task.priority}
-                          </span>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          {(() => {
+                            const isImmediate = task.priority === 'Critical' || task.priority === 'High';
+                            const isOverdue = task.due_date && isBefore(new Date(task.due_date), startOfDay(new Date()));
+                            const isDueSoon = task.due_date && (() => {
+                              const dueDate = startOfDay(new Date(task.due_date));
+                              const today = startOfDay(new Date());
+                              const maxDate = new Date(today.getTime() + 5 * 24 * 60 * 60 * 1000);
+                              return dueDate >= today && dueDate <= maxDate;
+                            })();
+                            
+                            const isAlertActive = isOverdue || (isImmediate && isDueSoon);
+                            const animationClass = isAlertActive ? 'animate-pulse' : '';
+
+                            return (
+                              <>
+                                {isAlertActive && (
+                                  <span 
+                                    className={`h-2 w-2 rounded-full shrink-0 ${
+                                      isOverdue 
+                                        ? 'bg-red-500 animate-soft-glow-red' 
+                                        : 'bg-amber-500 animate-soft-glow-amber'
+                                    }`}
+                                    title={isOverdue ? "Overdue Handl" : "Immediate Handl due soon"}
+                                  />
+                                )}
+                                <h4 className="font-semibold text-sm leading-none text-foreground group-hover:text-primary transition-colors">
+                                  {task.title}
+                                </h4>
+                                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                                  isImmediate 
+                                    ? 'bg-red-500/10 text-red-500 border border-red-500/20' 
+                                    : 'bg-slate-500/10 text-slate-500 border border-slate-500/20'
+                                } ${animationClass}`}>
+                                  {isImmediate ? 'Immediate' : 'Later'}
+                                </span>
+                              </>
+                            );
+                          })()}
                         </div>
                         {task.description && (
                           <p className="text-xs text-muted-foreground line-clamp-1">
@@ -276,7 +332,7 @@ export function Dashboard({ tasks, session, onRefresh }: DashboardProps) {
                             <Clock className="h-3 w-3" />
                             <span>Due: {new Date(task.due_date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</span>
                             {isBefore(new Date(task.due_date), startOfDay(new Date())) && (
-                              <span className="text-red-500 font-bold bg-red-50 px-1.5 py-0.5 rounded text-[9px] uppercase tracking-wide">Overdue</span>
+                              <span className="text-red-500 font-bold bg-red-50 dark:bg-red-950/20 px-1.5 py-0.5 rounded text-[9px] uppercase tracking-wide animate-pulse">Overdue</span>
                             )}
                           </div>
                         )}
@@ -334,24 +390,22 @@ export function Dashboard({ tasks, session, onRefresh }: DashboardProps) {
             </CardHeader>
             <CardContent>
               <div className="space-y-3.5">
-                {['Critical', 'High', 'Medium', 'Low'].map((p) => {
-                  const count = tasks.filter(t => t.priority === p && t.status !== 'Done').length;
-                  const percentage = tasks.filter(t => t.status !== 'Done').length > 0 
-                    ? (count / tasks.filter(t => t.status !== 'Done').length) * 100 
-                    : 0;
+                {[
+                  { key: 'Immediate', label: 'Immediate', colors: 'bg-red-500 animate-pulse', dbKeys: ['Critical', 'High'] },
+                  { key: 'Later', label: 'Later', colors: 'bg-blue-500', dbKeys: ['Medium', 'Low'] },
+                ].map((item) => {
+                  const activeTasks = tasks.filter(t => t.status !== 'Done');
+                  const count = activeTasks.filter(t => item.dbKeys.includes(t.priority)).length;
+                  const percentage = activeTasks.length > 0 ? (count / activeTasks.length) * 100 : 0;
                   return (
-                    <div key={p} className="space-y-1">
+                    <div key={item.key} className="space-y-1">
                       <div className="flex items-center justify-between text-xs font-semibold">
-                        <span>{p}</span>
+                        <span>{item.label}</span>
                         <span className="text-muted-foreground">{count} active</span>
                       </div>
                       <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
                         <div 
-                          className={`h-full rounded-full transition-all duration-500 ${
-                            p === 'Critical' ? 'bg-red-500 animate-pulse' : 
-                            p === 'High' ? 'bg-orange-500' : 
-                            p === 'Medium' ? 'bg-blue-500' : 'bg-slate-400'
-                          }`} 
+                          className={`h-full rounded-full transition-all duration-500 ${item.colors}`} 
                           style={{ width: `${percentage}%` }}
                         />
                       </div>
@@ -362,45 +416,7 @@ export function Dashboard({ tasks, session, onRefresh }: DashboardProps) {
             </CardContent>
           </Card>
 
-          {/* Task Status Bar Chart Card */}
-          <Card className="border shadow-sm bg-card">
-            <CardHeader className="pb-1">
-              <CardTitle className="text-sm font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
-                <TrendingUp className="h-4 w-4 text-primary" />
-                Handl Distribution
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="h-[180px] pt-4 pl-0">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={chartData} margin={{ left: -25, right: 10, bottom: 0, top: 0 }}>
-                  <XAxis 
-                    dataKey="name" 
-                    stroke="#94a3b8" 
-                    fontSize={11} 
-                    fontWeight={600}
-                    tickLine={false} 
-                    axisLine={false} 
-                  />
-                  <YAxis 
-                    stroke="#94a3b8" 
-                    fontSize={10} 
-                    tickLine={false} 
-                    axisLine={false} 
-                    allowDecimals={false}
-                  />
-                  <Tooltip 
-                    cursor={{fill: 'rgba(148, 163, 184, 0.1)'}}
-                    contentStyle={{ borderRadius: '12px', border: '1px solid #cbd5e1', boxShadow: '0 4px 12px rgba(0,0,0,0.05)', fontSize: '12px', color: '#1e293b' }}
-                  />
-                  <Bar dataKey="count" radius={[6, 6, 0, 0]}>
-                    {chartData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
-            </CardContent>
-          </Card>
+
 
         </div>
 

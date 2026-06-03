@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { 
   Table, 
   TableBody, 
@@ -14,6 +14,7 @@ import { format, isBefore, startOfDay } from 'date-fns';
 import { Clock, Trash2, CheckCircle2, Circle, GripVertical } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
+import { calculateNewPosition } from '@/lib/taskUtils';
 
 interface TaskListProps {
   tasks: Task[];
@@ -25,6 +26,22 @@ interface TaskListProps {
 export function TaskList({ tasks, onTaskClick, onRefresh, onTagClick }: TaskListProps) {
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
+
+  // Lock page scrolling strictly while touch dragging on mobile (fixes passive listener warnings)
+  useEffect(() => {
+    if (draggedIndex === null) return;
+
+    const preventDefault = (e: TouchEvent) => {
+      if (e.cancelable) {
+        e.preventDefault();
+      }
+    };
+
+    document.body.addEventListener('touchmove', preventDefault, { passive: false });
+    return () => {
+      document.body.removeEventListener('touchmove', preventDefault);
+    };
+  }, [draggedIndex]);
 
   const handleDragStart = (e: React.DragEvent, index: number) => {
     setDraggedIndex(index);
@@ -43,31 +60,7 @@ export function TaskList({ tasks, onTaskClick, onRefresh, onTagClick }: TaskList
   };
 
   const executeDrop = async (dragIndex: number, targetIdx: number) => {
-    let newPosition = 0.0;
-    
-    if (targetIdx === 0) {
-      // Dropping at the very top: subtract spacing from the first item
-      const firstPos = tasks[0].position || 0.0;
-      newPosition = firstPos - 1000.0;
-    } else if (targetIdx === tasks.length - 1) {
-      // Dropping at the very bottom: add spacing to the last item
-      const lastPos = tasks[tasks.length - 1].position || 0.0;
-      newPosition = lastPos + 1000.0;
-    } else {
-      // Dropping in the middle
-      if (targetIdx < dragIndex) {
-        // Dragging upwards: place between targetIndex - 1 and targetIndex
-        const prevPos = tasks[targetIdx - 1].position || 0.0;
-        const nextPos = tasks[targetIdx].position || 0.0;
-        newPosition = (prevPos + nextPos) / 2.0;
-      } else {
-        // Dragging downwards: place between targetIndex and targetIndex + 1
-        const prevPos = tasks[targetIdx].position || 0.0;
-        const nextPos = tasks[targetIdx + 1].position || 0.0;
-        newPosition = (prevPos + nextPos) / 2.0;
-      }
-    }
-
+    const newPosition = calculateNewPosition(dragIndex, targetIdx, tasks);
     const draggedTask = tasks[dragIndex];
     
     try {
@@ -136,10 +129,23 @@ export function TaskList({ tasks, onTaskClick, onRefresh, onTagClick }: TaskList
     Low: 'bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-800/40 dark:text-slate-300 dark:border-slate-700/50',
   };
 
+  const priorityLabels = {
+    Critical: 'Immediate',
+    High: 'Immediate',
+    Medium: 'Later',
+    Low: 'Later',
+  };
+
   const statusColors = {
     Todo: 'bg-muted text-muted-foreground',
-    'In Progress': 'bg-blue-500 text-white',
+    'In Progress': 'bg-muted text-muted-foreground',
     Done: 'bg-green-500 text-white',
+  };
+
+  const statusLabels = {
+    Todo: 'Pending',
+    'In Progress': 'Pending',
+    Done: 'Done',
   };
 
   const handleToggleComplete = async (e: React.MouseEvent, task: Task) => {
@@ -199,6 +205,16 @@ export function TaskList({ tasks, onTaskClick, onRefresh, onTagClick }: TaskList
               !isCompleted && 
               isBefore(new Date(task.due_date), startOfDay(new Date()));
 
+            const isImmediate = task.priority === 'Critical' || task.priority === 'High';
+            const isDueSoon = task.due_date && !isCompleted && (() => {
+              const dueDate = startOfDay(new Date(task.due_date));
+              const today = startOfDay(new Date());
+              const maxDate = new Date(today.getTime() + 5 * 24 * 60 * 60 * 1000);
+              return dueDate >= today && dueDate <= maxDate;
+            })();
+
+            const isAlertActive = !isCompleted && (isOverdue || (isImmediate && isDueSoon));
+
             const isDragOver = index === dragOverIndex;
             const isDragging = index === draggedIndex;
 
@@ -219,6 +235,9 @@ export function TaskList({ tasks, onTaskClick, onRefresh, onTagClick }: TaskList
                 onDrop={(e) => handleDrop(e, index)}
               >
                 <TableCell 
+                  role="button"
+                  aria-label="Drag to reorder task"
+                  aria-grabbed={draggedIndex === index ? "true" : "false"}
                   className="py-3 pl-3 pr-0 text-muted-foreground/35 cursor-grab active:cursor-grabbing touch-none select-none"
                   onTouchStart={(e) => {
                     e.stopPropagation();
@@ -249,9 +268,21 @@ export function TaskList({ tasks, onTaskClick, onRefresh, onTagClick }: TaskList
                 </TableCell>
                 <TableCell className="py-3">
                   <div className="flex flex-col gap-1">
-                    <span className={`font-semibold group-hover:text-primary transition-all duration-200 ${isCompleted ? 'line-through text-muted-foreground/60' : ''}`}>
-                      {task.title}
-                    </span>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      {isAlertActive && (
+                        <span 
+                          className={`h-2 w-2 rounded-full shrink-0 ${
+                            isOverdue 
+                              ? 'bg-red-500 animate-soft-glow-red' 
+                              : 'bg-amber-500 animate-soft-glow-amber'
+                          }`}
+                          title={isOverdue ? "Overdue Handl" : "Immediate Handl due soon"}
+                        />
+                      )}
+                      <span className={`font-semibold group-hover:text-primary transition-all duration-200 ${isCompleted ? 'line-through text-muted-foreground/60' : ''}`}>
+                        {task.title}
+                      </span>
+                    </div>
                     {task.tags && task.tags.length > 0 && (
                       <div className="flex gap-1 flex-wrap">
                         {task.tags.map(tag => (
@@ -272,12 +303,12 @@ export function TaskList({ tasks, onTaskClick, onRefresh, onTagClick }: TaskList
                 </TableCell>
                 <TableCell className="py-3">
                   <Badge variant="secondary" className={`${statusColors[task.status]} border-none text-[11px]`}>
-                    {task.status}
+                    {statusLabels[task.status] || task.status}
                   </Badge>
                 </TableCell>
                 <TableCell className="py-3">
                   <Badge variant="outline" className={`${priorityColors[task.priority]} text-[11px]`}>
-                    {task.priority}
+                    {priorityLabels[task.priority] || task.priority}
                   </Badge>
                 </TableCell>
                 <TableCell className="py-3">

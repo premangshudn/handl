@@ -20,7 +20,6 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
 import { 
   Select, 
   SelectContent, 
@@ -36,8 +35,7 @@ import type { User as SupabaseUser } from '@supabase/supabase-js';
 
 const profileSchema = z.object({
   displayName: z.string().min(1, 'Display Name is required').max(30, 'Name must be under 30 characters'),
-  mantra: z.string().max(80, 'Mantra must be under 80 characters').optional(),
-  defaultView: z.enum(['dashboard', 'kanban', 'list']),
+  defaultView: z.enum(['dashboard', 'list']),
 });
 
 type ProfileFormValues = z.infer<typeof profileSchema>;
@@ -98,8 +96,7 @@ export function ProfileDialog({ open, onOpenChange, user, onUpdate }: ProfileDia
       await supabase.auth.signOut();
       
       if (rpcError) {
-        console.warn("RPC delete failed (SQL function might not be defined):", rpcError.message);
-        toast.success("All personal Handl data has been completely erased. You have been successfully signed out.");
+        throw new Error(`Account deletion failed: ${rpcError.message}. Please contact support or run the SQL trigger function in Supabase.`);
       } else {
         toast.success("Your account and all associated data have been permanently deleted.");
       }
@@ -118,7 +115,6 @@ export function ProfileDialog({ open, onOpenChange, user, onUpdate }: ProfileDia
     resolver: zodResolver(profileSchema),
     defaultValues: {
       displayName: '',
-      mantra: '',
       defaultView: 'dashboard',
     },
   });
@@ -131,7 +127,6 @@ export function ProfileDialog({ open, onOpenChange, user, onUpdate }: ProfileDia
 
       form.reset({
         displayName: meta.display_name || defaultDisplayName,
-        mantra: meta.mantra || '',
         defaultView: meta.default_view || 'dashboard',
       });
       setAvatarUrl(meta.avatar_url || '');
@@ -194,10 +189,14 @@ export function ProfileDialog({ open, onOpenChange, user, onUpdate }: ProfileDia
           const sSize = minSize / zoom;
 
           // Align crop coordinate calculations to perfectly match CSS scale/translate bounds
-          const sx = img.width / 2 - (offsetX / 100) * img.width - sSize / 2;
-          const sy = img.height / 2 - (offsetY / 100) * img.height - sSize / 2;
+          const sx = img.width / 2 - sSize / 2 - (offsetX / 100) * sSize;
+          const sy = img.height / 2 - sSize / 2 - (offsetY / 100) * sSize;
 
-          ctx.drawImage(img, sx, sy, sSize, sSize, 0, 0, SIZE, SIZE);
+          // Prevent source coordinates from going outside the image bounds
+          const finalSx = Math.max(0, Math.min(img.width - sSize, sx));
+          const finalSy = Math.max(0, Math.min(img.height - sSize, sy));
+
+          ctx.drawImage(img, finalSx, finalSy, sSize, sSize, 0, 0, SIZE, SIZE);
           const base64Output = canvas.toDataURL('image/jpeg', 0.75); // 75% Quality JPEG
           resolve(base64Output);
         } catch (err) {
@@ -221,7 +220,6 @@ export function ProfileDialog({ open, onOpenChange, user, onUpdate }: ProfileDia
       const { error } = await supabase.auth.updateUser({
         data: {
           display_name: values.displayName,
-          mantra: values.mantra || '',
           avatar_url: finalAvatar,
           default_view: values.defaultView,
         }
@@ -378,27 +376,7 @@ export function ProfileDialog({ open, onOpenChange, user, onUpdate }: ProfileDia
               )}
             />
 
-            {/* Mantra / Bio */}
-            <FormField
-              control={form.control}
-              name="mantra"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Focus Mantra / Bio</FormLabel>
-                  <FormControl>
-                    <Textarea 
-                      placeholder="e.g. Let's focus on what matters today. Keep it simple." 
-                      className="resize-none rounded-xl h-20 shadow-inner text-sm" 
-                      {...field} 
-                    />
-                  </FormControl>
-                  <FormDescription className="text-[10px] text-muted-foreground">
-                    This mantra displays under your greeting on the Dashboard.
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            {/* Mantra is now editable inline directly on the Dashboard */}
 
             {/* Default View System Preference */}
             <FormField
@@ -415,7 +393,6 @@ export function ProfileDialog({ open, onOpenChange, user, onUpdate }: ProfileDia
                     </FormControl>
                     <SelectContent className="rounded-xl">
                       <SelectItem value="dashboard">Dashboard</SelectItem>
-                      <SelectItem value="kanban">Focus Board</SelectItem>
                       <SelectItem value="list">Handl List</SelectItem>
                     </SelectContent>
                   </Select>

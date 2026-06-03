@@ -22,6 +22,13 @@ export function TaskCard({ task, onClick, onTagClick }: TaskCardProps) {
     Low: 'bg-slate-100 text-slate-700 border-slate-200 hover:bg-slate-200 dark:bg-slate-800/40 dark:text-slate-300 dark:border-slate-700/50',
   };
 
+  const priorityLabels = {
+    Critical: 'Immediate',
+    High: 'Immediate',
+    Medium: 'Later',
+    Low: 'Later',
+  };
+
   return (
     <Card 
       onClick={() => onClick(task)}
@@ -30,7 +37,7 @@ export function TaskCard({ task, onClick, onTagClick }: TaskCardProps) {
       <div className="space-y-3">
         <div className="flex items-start justify-between gap-2">
           <Badge className={`${priorityColors[task.priority]} font-semibold text-[10px] uppercase tracking-wider px-2 py-0`}>
-            {task.priority}
+            {priorityLabels[task.priority] || task.priority}
           </Badge>
           {task.due_date && (
             <div className={`flex items-center gap-1 text-[11px] font-medium ${isOverdue ? 'text-red-500' : 'text-muted-foreground'}`}>

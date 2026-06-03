@@ -35,15 +35,17 @@
         "required": ["title"],
         "properties": {
           "id": { "type": "string", "format": "uuid" },
-          "title": { "type": "string" },
-          "description": { "type": "string" },
+          "title": { "type": "string", "maxLength": 150 },
+          "description": { "type": "string", "maxLength": 3000 },
           "priority": { 
             "type": "string", 
-            "enum": ["Low", "Medium", "High", "Critical"] 
+            "enum": ["Low", "Medium", "High", "Critical"],
+            "description": "Task urgency rating. The database constraints support Low, Medium, High, and Critical. The Handl app maps client-side 'Immediate' to 'Critical' and 'Later' to 'Medium'."
           },
           "status": { 
             "type": "string", 
-            "enum": ["Todo", "In Progress", "Done"] 
+            "enum": ["Todo", "In Progress", "Done"],
+            "description": "Task completion state. The database constraints support Todo, In Progress, and Done. The Handl app maps client-side 'Pending' to 'Todo' and 'Done' to 'Done'."
           },
           "due_date": { "type": "string", "format": "date-time" },
           "created_at": { "type": "string", "format": "date-time" },
@@ -59,17 +61,19 @@
         "type": "object",
         "required": ["title"],
         "properties": {
-          "title": { "type": "string", "example": "Test Task" },
-          "description": { "type": "string", "example": "Created via API" },
+          "title": { "type": "string", "maxLength": 150, "example": "Test Task" },
+          "description": { "type": "string", "maxLength": 3000, "example": "Created via API" },
           "priority": { 
             "type": "string", 
             "enum": ["Low", "Medium", "High", "Critical"],
-            "default": "Medium"
+            "default": "Medium",
+            "description": "The Handl app maps 'Immediate' to 'Critical' and 'Later' to 'Medium'."
           },
           "status": { 
             "type": "string", 
             "enum": ["Todo", "In Progress", "Done"],
-            "default": "Todo"
+            "default": "Todo",
+            "description": "The Handl app maps 'Pending' to 'Todo' and 'Done' to 'Done'."
           },
           "due_date": { "type": "string", "format": "date-time" },
           "assigned_to": { "type": "string", "format": "uuid", "description": "Must match your authenticated user ID due to RLS." },

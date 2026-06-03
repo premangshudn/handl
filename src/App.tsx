@@ -4,14 +4,13 @@ import type { Task } from '@/lib/supabase';
 import { Auth } from '@/components/Auth';
 import { Layout } from '@/components/Layout';
 import { Dashboard } from '@/components/Dashboard';
-import { KanbanBoard } from '@/components/KanbanBoard';
 import { TaskList } from '@/components/TaskList';
 import { TaskDialog } from '@/components/TaskDialog';
 import { Toaster } from '@/components/ui/sonner';
 import { Loader2 } from 'lucide-react';
 import type { Session } from '@supabase/supabase-js';
 
-type ViewType = 'dashboard' | 'kanban' | 'list';
+type ViewType = 'dashboard' | 'list';
 
 export default function App() {
   const [session, setSession] = useState<Session | null>(null);
@@ -23,6 +22,8 @@ export default function App() {
   const [defaultStatus, setDefaultStatus] = useState<Task['status']>('Todo');
   const [isRecovering, setIsRecovering] = useState(false);
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
+  const activeRequestRef = useRef<number>(0);
+  const initialViewLoaded = useRef(false);
 
   // Keep track of latest state to avoid stale closures in onAuthStateChange
   const stateRef = useRef({ loading, session });
@@ -60,10 +61,23 @@ export default function App() {
   useEffect(() => {
     if (!session?.user?.id) return;
 
+    // Load initial tasks from local storage cache for instant startup
+    const cached = localStorage.getItem(`handl_cache_${session.user.id}`);
+    if (cached) {
+      try {
+        setTasks(JSON.parse(cached));
+      } catch (e) {
+        console.error('Failed to parse cached tasks', e);
+      }
+    }
+
     fetchTasks();
-    const preferredView = session.user.user_metadata?.default_view as ViewType;
-    if (preferredView && ['dashboard', 'kanban', 'list'].includes(preferredView)) {
-      setActiveView(preferredView);
+    if (!initialViewLoaded.current) {
+      const preferredView = session.user.user_metadata?.default_view as ViewType;
+      if (preferredView && ['dashboard', 'list'].includes(preferredView)) {
+        setActiveView(preferredView);
+      }
+      initialViewLoaded.current = true;
     }
 
     // Subscribe to realtime database changes on tasks table for active user
@@ -101,10 +115,7 @@ export default function App() {
       }
       fetchTasks();
       
-      const preferredView = (newSession || session)?.user?.user_metadata?.default_view as ViewType;
-      if (preferredView && ['dashboard', 'kanban', 'list'].includes(preferredView)) {
-        setActiveView(preferredView);
-      }
+
     } catch (err) {
       console.error('Error refreshing session:', err);
     }
@@ -112,18 +123,26 @@ export default function App() {
 
   const fetchTasks = async () => {
     if (!session?.user?.id) return;
+    const reqId = ++activeRequestRef.current;
     try {
       const { data, error } = await supabase
         .from('tasks')
         .select('*')
         .eq('assigned_to', session.user.id)
-        .order('position', { ascending: true })
-        .order('created_at', { ascending: false });
+        .order('position', { ascending: true });
 
       if (error) throw error;
-      setTasks(data || []);
-    } catch (error) {
+      
+      if (reqId === activeRequestRef.current) {
+        setTasks(data || []);
+        localStorage.setItem(`handl_cache_${session.user.id}`, JSON.stringify(data || []));
+      }
+    } catch (error: any) {
       console.error('Error fetching tasks:', error);
+      const cached = localStorage.getItem(`handl_cache_${session.user.id}`);
+      if (cached && reqId === activeRequestRef.current) {
+        setTasks(JSON.parse(cached));
+      }
     }
   };
 
@@ -194,16 +213,10 @@ export default function App() {
               tasks={tasks} 
               session={session} 
               onRefresh={fetchTasks} 
+              onTaskClick={handleEditTask}
             />
           )}
-          {activeView === 'kanban' && (
-            <KanbanBoard 
-              tasks={selectedTag ? tasks.filter(t => t.tags?.includes(selectedTag)) : tasks} 
-              onTaskClick={handleEditTask} 
-              onAddTask={handleAddTask}
-              onTagClick={setSelectedTag}
-            />
-          )}
+
           {activeView === 'list' && (
             <TaskList 
               tasks={selectedTag ? tasks.filter(t => t.tags?.includes(selectedTag)) : tasks} 
