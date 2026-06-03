@@ -125,9 +125,14 @@ export function ProfileDialog({ open, onOpenChange, user, onUpdate }: ProfileDia
       const fallbackName = user.email ? user.email.split('@')[0].split(/[._-]/)[0] : '';
       const defaultDisplayName = fallbackName.charAt(0).toUpperCase() + fallbackName.slice(1);
 
+      const rawDefaultView = meta.default_view;
+      const resolvedDefaultView = (rawDefaultView === 'dashboard' || rawDefaultView === 'list') 
+        ? rawDefaultView 
+        : 'dashboard';
+
       form.reset({
         displayName: meta.display_name || defaultDisplayName,
-        defaultView: meta.default_view || 'dashboard',
+        defaultView: resolvedDefaultView,
       });
       setAvatarUrl(meta.avatar_url || '');
       setRawImageSrc('');
