@@ -153,7 +153,7 @@ export function Layout({ children, session, activeView, setActiveView, onAddTask
         </header>
 
         {/* Content Area */}
-        <main className="flex-1 overflow-y-auto p-6 md:p-8 pb-24 md:pb-8">
+        <main className="flex-1 overflow-y-auto p-6 md:p-8 pb-32 md:pb-8">
           {children}
         </main>
 
