@@ -248,99 +248,104 @@ export function Dashboard({ tasks, session, onRefresh, onTaskClick }: DashboardP
           </Card>
 
           {/* Focus of the Day Checklist */}
-          <Card className="border shadow-sm bg-card">
+          <Card className="border shadow-sm bg-card gap-0">
             <CardHeader className="pb-4 border-b">
               <div className="flex items-center justify-between">
                 <div>
                   <CardTitle className="text-lg font-bold flex items-center gap-2">
                     <Flame className="h-5 w-5 text-primary" />
-                    Today's Handls
+                    Handl Today
                   </CardTitle>
                   <CardDescription className="text-xs">
-                    Your highest priority and most urgent Handls to complete today.
+                    Priority items and Handls due today.
                   </CardDescription>
                 </div>
               </div>
             </CardHeader>
-            <CardContent className="pt-6">
+            <CardContent className="pt-4">
               {focusTasks.length > 0 ? (
                 <div className="space-y-4">
-                  {focusTasks.map(task => (
-                    <div 
-                      key={task.id} 
-                      className="group flex items-start gap-4 p-4 rounded-xl border bg-background/50 hover:bg-accent/30 hover:border-primary/20 transition-all shadow-sm cursor-pointer"
-                      onClick={() => onTaskClick?.(task)}
-                    >
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleToggleComplete(task.id);
-                        }}
-                        className="mt-1 h-5 w-5 rounded-md border-2 border-muted-foreground/30 hover:border-primary flex items-center justify-center transition-all bg-background text-transparent hover:text-primary active:scale-90 shrink-0"
+                  {focusTasks.map(task => {
+                    const dueDateObj = task.due_date ? new Date(task.due_date) : null;
+                    const isImmediate = task.priority === 'Critical' || task.priority === 'High';
+                    const isOverdue = dueDateObj && isBefore(dueDateObj, startOfDay(new Date()));
+                    const isDueToday = dueDateObj && (() => {
+                      const dueDate = startOfDay(dueDateObj);
+                      const today = startOfDay(new Date());
+                      return dueDate.getTime() === today.getTime();
+                    })();
+                    const isDueSoon = dueDateObj && (() => {
+                      const dueDate = startOfDay(dueDateObj);
+                      const today = startOfDay(new Date());
+                      const maxDate = new Date(today.getTime() + 5 * 24 * 60 * 60 * 1000);
+                      return dueDate >= today && dueDate <= maxDate;
+                    })();
+                    
+                    const isAlertActive = isOverdue || (isImmediate && isDueSoon);
+                    const animationClass = isAlertActive ? 'animate-pulse' : '';
+                    const showDueDate = task.due_date && !( !isImmediate && isDueToday );
+
+                    return (
+                      <div 
+                        key={task.id} 
+                        className="group flex items-start gap-4 p-4 rounded-xl border bg-background/50 hover:bg-accent/30 hover:border-primary/20 transition-all shadow-sm cursor-pointer"
+                        onClick={() => onTaskClick?.(task)}
                       >
-                        <CheckCircle2 className="h-4 w-4 opacity-0 group-hover:opacity-40 transition-opacity" />
-                      </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleToggleComplete(task.id);
+                          }}
+                          className="mt-1 h-5 w-5 rounded-md border-2 border-muted-foreground/30 hover:border-primary flex items-center justify-center transition-all bg-background text-transparent hover:text-primary active:scale-90 shrink-0"
+                        >
+                          <CheckCircle2 className="h-4 w-4 opacity-0 group-hover:opacity-40 transition-opacity" />
+                        </button>
 
-                      <div className="flex-1 space-y-1">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          {(() => {
-                            const isImmediate = task.priority === 'Critical' || task.priority === 'High';
-                            const isOverdue = task.due_date && isBefore(new Date(task.due_date), startOfDay(new Date()));
-                            const isDueSoon = task.due_date && (() => {
-                              const dueDate = startOfDay(new Date(task.due_date));
-                              const today = startOfDay(new Date());
-                              const maxDate = new Date(today.getTime() + 5 * 24 * 60 * 60 * 1000);
-                              return dueDate >= today && dueDate <= maxDate;
-                            })();
-                            
-                            const isAlertActive = isOverdue || (isImmediate && isDueSoon);
-                            const animationClass = isAlertActive ? 'animate-pulse' : '';
-
-                            return (
-                              <>
-                                {isAlertActive && (
-                                  <span 
-                                    className={`h-2 w-2 rounded-full shrink-0 ${
-                                      isOverdue 
-                                        ? 'bg-red-500 animate-soft-glow-red' 
-                                        : 'bg-amber-500 animate-soft-glow-amber'
-                                    }`}
-                                    title={isOverdue ? "Overdue Handl" : "Now Handl due soon"}
-                                  />
-                                )}
-                                <h4 className="font-semibold text-sm leading-none text-foreground group-hover:text-primary transition-colors">
-                                  {task.title}
-                                </h4>
-                                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                                  isImmediate 
-                                    ? 'bg-red-500/10 text-red-500 border border-red-500/20' 
-                                    : 'bg-slate-500/10 text-slate-500 border border-slate-500/20'
-                                } ${animationClass}`}>
-                                  {isImmediate ? 'Now' : 'Later'}
-                                </span>
-                              </>
-                            );
-                          })()}
-                        </div>
-                        {task.description && (
-                          <p className="text-xs text-muted-foreground line-clamp-1">
-                            {task.description}
-                          </p>
-                        )}
-                        {task.due_date && (
-                          <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground pt-1">
-                            <Clock className="h-3 w-3" />
-                            <span>Due: {new Date(task.due_date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</span>
-                            {isBefore(new Date(task.due_date), startOfDay(new Date())) && (
-                              <span className="text-red-500 font-bold bg-red-50 dark:bg-red-950/20 px-1.5 py-0.5 rounded text-[9px] uppercase tracking-wide animate-pulse">Overdue</span>
+                        <div className="flex-1 space-y-1">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            {isAlertActive && (
+                              <span 
+                                className={`h-2 w-2 rounded-full shrink-0 ${
+                                  isOverdue 
+                                    ? 'bg-red-500 animate-soft-glow-red' 
+                                    : 'bg-amber-500 animate-soft-glow-amber'
+                                }`}
+                                title={isOverdue ? "Overdue Handl" : "Now Handl due soon"}
+                              />
                             )}
+                            <h4 className="font-semibold text-sm leading-none text-foreground group-hover:text-primary transition-colors">
+                              {task.title}
+                            </h4>
+                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                              isImmediate 
+                                ? 'bg-orange-600 text-white border-transparent' 
+                                : isDueToday
+                                  ? 'bg-amber-500 text-white border-transparent'
+                                  : 'bg-slate-400 dark:bg-slate-500 text-white border-transparent'
+                            } ${animationClass}`}>
+                              {isImmediate ? 'Now' : isDueToday ? 'Due Today' : 'Later'}
+                            </span>
                           </div>
-                        )}
-                      </div>
+                          {task.description && (
+                            <p className="text-xs text-muted-foreground line-clamp-1">
+                              {task.description}
+                            </p>
+                          )}
+                          {showDueDate && dueDateObj && (
+                            <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground pt-1">
+                              <Clock className="h-3 w-3" />
+                              <span>Due: {dueDateObj.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</span>
+                              {isBefore(dueDateObj, startOfDay(new Date())) && (
+                                <span className="text-red-500 font-bold bg-red-50 dark:bg-red-950/20 px-1.5 py-0.5 rounded text-[9px] uppercase tracking-wide animate-pulse">Overdue</span>
+                              )}
+                            </div>
+                          )}
+                        </div>
 
-                      <ArrowRight className="h-4 w-4 text-muted-foreground/30 opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all self-center" />
-                    </div>
-                  ))}
+                        <ArrowRight className="h-4 w-4 text-muted-foreground/30 opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all self-center" />
+                      </div>
+                    );
+                  })}
                 </div>
               ) : (
                 <div className="flex flex-col items-center justify-center py-12 text-center border-2 border-dashed border-border/60 rounded-xl bg-muted/10">
@@ -391,8 +396,8 @@ export function Dashboard({ tasks, session, onRefresh, onTaskClick }: DashboardP
             <CardContent>
               <div className="space-y-3.5">
                 {[
-                  { key: 'Now', label: 'Now', colors: 'bg-red-500 animate-pulse', dbKeys: ['Critical', 'High'] },
-                  { key: 'Later', label: 'Later', colors: 'bg-blue-500', dbKeys: ['Medium', 'Low'] },
+                  { key: 'Now', label: 'Now', colors: 'bg-orange-600 animate-pulse', dbKeys: ['Critical', 'High'] },
+                  { key: 'Later', label: 'Later', colors: 'bg-slate-500', dbKeys: ['Medium', 'Low'] },
                 ].map((item) => {
                   const activeTasks = tasks.filter(t => t.status !== 'Done');
                   const count = activeTasks.filter(t => item.dbKeys.includes(t.priority)).length;

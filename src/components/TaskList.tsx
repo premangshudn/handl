@@ -123,10 +123,10 @@ export function TaskList({ tasks, onTaskClick, onRefresh, onTagClick }: TaskList
     setDragOverIndex(null);
   };
   const priorityColors = {
-    Critical: 'bg-red-100 text-red-700 border-red-200 dark:bg-red-950/40 dark:text-red-300 dark:border-red-900/50',
-    High: 'bg-orange-100 text-orange-700 border-orange-200 dark:bg-orange-950/40 dark:text-orange-300 dark:border-orange-900/50',
-    Medium: 'bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-950/40 dark:text-blue-300 dark:border-blue-900/50',
-    Low: 'bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-800/40 dark:text-slate-300 dark:border-slate-700/50',
+    Critical: 'bg-orange-600 text-white border-transparent dark:bg-orange-600 dark:text-white',
+    High: 'bg-orange-600 text-white border-transparent dark:bg-orange-600 dark:text-white',
+    Medium: 'bg-slate-400 text-white border-transparent dark:bg-slate-500 dark:text-white',
+    Low: 'bg-slate-400 text-white border-transparent dark:bg-slate-500 dark:text-white',
   };
 
   const priorityLabels = {
@@ -206,6 +206,11 @@ export function TaskList({ tasks, onTaskClick, onRefresh, onTagClick }: TaskList
               isBefore(new Date(task.due_date), startOfDay(new Date()));
 
             const isImmediate = task.priority === 'Critical' || task.priority === 'High';
+            const isDueToday = task.due_date && !isCompleted && (() => {
+              const dueDate = startOfDay(new Date(task.due_date));
+              const today = startOfDay(new Date());
+              return dueDate.getTime() === today.getTime();
+            })();
             const isDueSoon = task.due_date && !isCompleted && (() => {
               const dueDate = startOfDay(new Date(task.due_date));
               const today = startOfDay(new Date());
@@ -214,6 +219,7 @@ export function TaskList({ tasks, onTaskClick, onRefresh, onTagClick }: TaskList
             })();
 
             const isAlertActive = !isCompleted && (isOverdue || (isImmediate && isDueSoon));
+            const displayDueToday = !isImmediate && isDueToday;
 
             const isDragOver = index === dragOverIndex;
             const isDragging = index === draggedIndex;
@@ -307,15 +313,27 @@ export function TaskList({ tasks, onTaskClick, onRefresh, onTagClick }: TaskList
                   </Badge>
                 </TableCell>
                 <TableCell className="py-3">
-                  <Badge variant="outline" className={`${priorityColors[task.priority]} text-[11px]`}>
-                    {priorityLabels[task.priority] || task.priority}
-                  </Badge>
+                  {displayDueToday ? (
+                    <Badge variant="outline" className="bg-amber-500 text-white border-transparent dark:bg-amber-500 dark:text-white text-[11px]">
+                      Due Today
+                    </Badge>
+                  ) : (
+                    <Badge variant="outline" className={`${priorityColors[task.priority]} text-[11px]`}>
+                      {priorityLabels[task.priority] || task.priority}
+                    </Badge>
+                  )}
                 </TableCell>
                 <TableCell className="py-3">
                   {task.due_date ? (
-                    <div className={`flex items-center gap-1.5 text-sm ${isOverdue ? 'text-red-500 font-medium' : 'text-muted-foreground'}`}>
+                    <div className={`flex items-center gap-1.5 text-sm ${
+                      isOverdue 
+                        ? 'text-red-500 font-medium' 
+                        : displayDueToday
+                          ? 'text-amber-600 dark:text-amber-400 font-medium'
+                          : 'text-muted-foreground'
+                    }`}>
                       <Clock className="h-3.5 w-3.5" />
-                      {format(new Date(task.due_date), 'PPP')}
+                      {displayDueToday ? 'Today' : format(new Date(task.due_date), 'PPP')}
                     </div>
                   ) : (
                     <span className="text-muted-foreground text-sm">-</span>
@@ -339,7 +357,7 @@ export function TaskList({ tasks, onTaskClick, onRefresh, onTagClick }: TaskList
           {tasks.length === 0 && (
             <TableRow>
               <TableCell colSpan={7} className="h-32 text-center text-muted-foreground">
-                No handls found. Create one to get started!
+                Your space is clear. Capture a new Handl when you're ready!
               </TableCell>
             </TableRow>
           )}

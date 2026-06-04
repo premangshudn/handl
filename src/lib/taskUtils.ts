@@ -73,7 +73,7 @@ export function calculateUrgencyScore(task: Task, todayRef: Date = new Date()): 
 }
 
 /**
- * Filters and sorts active tasks for "Today's Handls" focus view.
+ * Filters and sorts active tasks for "Handl Today" focus view.
  */
 export function getFocusTasks(tasks: Task[], todayRef: Date = new Date()): Task[] {
   return tasks
