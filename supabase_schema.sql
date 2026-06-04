@@ -1,4 +1,4 @@
--- TaskFlow Supabase Schema
+-- Handl Supabase Schema
 
 -- 1. Create Tasks Table
 CREATE TABLE IF NOT EXISTS public.tasks (
