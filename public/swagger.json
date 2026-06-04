@@ -40,7 +40,7 @@
           "priority": { 
             "type": "string", 
             "enum": ["Low", "Medium", "High", "Critical"],
-            "description": "Task urgency rating. The database constraints support Low, Medium, High, and Critical. The Handl app maps client-side 'Immediate' to 'Critical' and 'Later' to 'Medium'."
+            "description": "Task urgency rating. The database constraints support Low, Medium, High, and Critical. The Handl app maps client-side 'Now' to 'Critical' and 'Later' to 'Medium'."
           },
           "status": { 
             "type": "string", 
@@ -67,7 +67,7 @@
             "type": "string", 
             "enum": ["Low", "Medium", "High", "Critical"],
             "default": "Medium",
-            "description": "The Handl app maps 'Immediate' to 'Critical' and 'Later' to 'Medium'."
+            "description": "The Handl app maps 'Now' to 'Critical' and 'Later' to 'Medium'."
           },
           "status": { 
             "type": "string", 

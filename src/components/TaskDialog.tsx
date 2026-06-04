@@ -45,7 +45,7 @@ import {
 const taskSchema = z.object({
   title: z.string().min(1, 'Title is required').max(150, 'Title must be under 150 characters'),
   description: z.string().max(3000, 'Description must be under 3000 characters').optional(),
-  priority: z.enum(['Later', 'Immediate']),
+  priority: z.enum(['Later', 'Now']),
   status: z.enum(['Pending', 'Done']),
   due_date: z.string().optional(),
   tags: z.string().optional(),
@@ -249,7 +249,7 @@ export function TaskDialog({ task, open, onOpenChange, onRefresh, defaultStatus,
                       </FormControl>
                       <SelectContent>
                         <SelectItem value="Later">Later</SelectItem>
-                        <SelectItem value="Immediate">Immediate</SelectItem>
+                        <SelectItem value="Now">Now</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />

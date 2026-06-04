@@ -31,16 +31,16 @@ export function calculateNewPosition(dragIndex: number, targetIdx: number, tasks
 /**
  * Maps database priorities to client-side Form priorities.
  */
-export function mapDBPriorityToForm(p: Task['priority']): 'Later' | 'Immediate' {
-  if (p === 'Critical' || p === 'High') return 'Immediate';
+export function mapDBPriorityToForm(p: Task['priority']): 'Later' | 'Now' {
+  if (p === 'Critical' || p === 'High') return 'Now';
   return 'Later';
 }
 
 /**
  * Maps client-side Form priorities to database priorities.
  */
-export function mapFormPriorityToDB(p: 'Later' | 'Immediate'): Task['priority'] {
-  return p === 'Immediate' ? 'Critical' : 'Medium';
+export function mapFormPriorityToDB(p: 'Later' | 'Now'): Task['priority'] {
+  return p === 'Now' ? 'Critical' : 'Medium';
 }
 
 /**
@@ -89,7 +89,7 @@ export function getFocusTasks(tasks: Task[], todayRef: Date = new Date()): Task[
       const urgencyB = calculateUrgencyScore(b, todayRef);
       if (urgencyB !== urgencyA) return urgencyB - urgencyA;
 
-      // Tier 2: Priority (Immediate > Later)
+      // Tier 2: Priority (Now > Later)
       const isImmediateA = a.priority === 'Critical' || a.priority === 'High' ? 1 : 0;
       const isImmediateB = b.priority === 'Critical' || b.priority === 'High' ? 1 : 0;
       if (isImmediateB !== isImmediateA) return isImmediateB - isImmediateA;

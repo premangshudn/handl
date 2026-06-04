@@ -305,7 +305,7 @@ export function Dashboard({ tasks, session, onRefresh, onTaskClick }: DashboardP
                                         ? 'bg-red-500 animate-soft-glow-red' 
                                         : 'bg-amber-500 animate-soft-glow-amber'
                                     }`}
-                                    title={isOverdue ? "Overdue Handl" : "Immediate Handl due soon"}
+                                    title={isOverdue ? "Overdue Handl" : "Now Handl due soon"}
                                   />
                                 )}
                                 <h4 className="font-semibold text-sm leading-none text-foreground group-hover:text-primary transition-colors">
@@ -316,7 +316,7 @@ export function Dashboard({ tasks, session, onRefresh, onTaskClick }: DashboardP
                                     ? 'bg-red-500/10 text-red-500 border border-red-500/20' 
                                     : 'bg-slate-500/10 text-slate-500 border border-slate-500/20'
                                 } ${animationClass}`}>
-                                  {isImmediate ? 'Immediate' : 'Later'}
+                                  {isImmediate ? 'Now' : 'Later'}
                                 </span>
                               </>
                             );
@@ -391,7 +391,7 @@ export function Dashboard({ tasks, session, onRefresh, onTaskClick }: DashboardP
             <CardContent>
               <div className="space-y-3.5">
                 {[
-                  { key: 'Immediate', label: 'Immediate', colors: 'bg-red-500 animate-pulse', dbKeys: ['Critical', 'High'] },
+                  { key: 'Now', label: 'Now', colors: 'bg-red-500 animate-pulse', dbKeys: ['Critical', 'High'] },
                   { key: 'Later', label: 'Later', colors: 'bg-blue-500', dbKeys: ['Medium', 'Low'] },
                 ].map((item) => {
                   const activeTasks = tasks.filter(t => t.status !== 'Done');

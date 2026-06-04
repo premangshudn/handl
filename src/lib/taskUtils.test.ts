@@ -32,14 +32,14 @@ const createMockTask = (overrides: Partial<Task>): Task => {
 
 describe('taskUtils - priority and status mapping', () => {
   it('should map DB priorities to Form priorities correctly', () => {
-    expect(mapDBPriorityToForm('Critical')).toBe('Immediate');
-    expect(mapDBPriorityToForm('High')).toBe('Immediate');
+    expect(mapDBPriorityToForm('Critical')).toBe('Now');
+    expect(mapDBPriorityToForm('High')).toBe('Now');
     expect(mapDBPriorityToForm('Medium')).toBe('Later');
     expect(mapDBPriorityToForm('Low')).toBe('Later');
   });
 
   it('should map Form priorities to DB priorities correctly', () => {
-    expect(mapFormPriorityToDB('Immediate')).toBe('Critical');
+    expect(mapFormPriorityToDB('Now')).toBe('Critical');
     expect(mapFormPriorityToDB('Later')).toBe('Medium');
   });
 
@@ -129,7 +129,7 @@ describe('taskUtils - Today\'s Handls focus filtering and sorting', () => {
     expect(getFocusTasks(tasks, todayRef)).toHaveLength(0);
   });
 
-  it('should include Immediate tasks even without due date', () => {
+  it('should include Now tasks even without due date', () => {
     const tasks = [
       createMockTask({ id: '1', priority: 'Critical', due_date: null })
     ];
@@ -147,7 +147,7 @@ describe('taskUtils - Today\'s Handls focus filtering and sorting', () => {
     expect(sorted).toHaveLength(3);
     expect(sorted[0].id).toBe('2'); // Overdue is first
     expect(sorted[1].id).toBe('3'); // Due today is second
-    expect(sorted[2].id).toBe('1'); // Immediate no date is third
+    expect(sorted[2].id).toBe('1'); // Now no date is third
   });
 
   it('should sort identical urgency/priority by manual position value', () => {

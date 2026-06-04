@@ -130,8 +130,8 @@ export function TaskList({ tasks, onTaskClick, onRefresh, onTagClick }: TaskList
   };
 
   const priorityLabels = {
-    Critical: 'Immediate',
-    High: 'Immediate',
+    Critical: 'Now',
+    High: 'Now',
     Medium: 'Later',
     Low: 'Later',
   };
