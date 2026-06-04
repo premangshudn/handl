@@ -60,6 +60,10 @@ export default function App() {
         setSession(newSession);
       }
 
+      if (event === 'SIGNED_OUT') {
+        localStorage.removeItem('handl_active_view');
+      }
+
       if (event === 'PASSWORD_RECOVERY') {
         setIsRecovering(true);
       }
