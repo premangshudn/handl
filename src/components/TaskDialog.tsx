@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -57,7 +57,34 @@ interface TaskDialogProps {
   minPosition?: number;
 }
 
+const PLACEHOLDERS = [
+  "Call Mom to catch up...",
+  "Fix appointment with dentist...",
+  "Prepare groceries list...",
+  "Book flight tickets...",
+  "Apply for leaves...",
+  "Water the indoor plants...",
+  "Draft response to team proposal..."
+];
+
 export function TaskDialog({ task, open, onOpenChange, onRefresh, defaultStatus, minPosition }: TaskDialogProps) {
+  const [placeholderIdx, setPlaceholderIdx] = useState(0);
+  const [placeholderFade, setPlaceholderFade] = useState(true);
+
+  useEffect(() => {
+    if (task || !open) return;
+
+    const timer = setInterval(() => {
+      setPlaceholderFade(false);
+      setTimeout(() => {
+        setPlaceholderIdx((prev) => (prev + 1) % PLACEHOLDERS.length);
+        setPlaceholderFade(true);
+      }, 300);
+    }, 4000);
+
+    return () => clearInterval(timer);
+  }, [open, task]);
+
   const form = useForm<TaskFormValues>({
     resolver: zodResolver(taskSchema),
     defaultValues: {
@@ -184,7 +211,14 @@ export function TaskDialog({ task, open, onOpenChange, onRefresh, defaultStatus,
                 <FormItem>
                   <FormLabel>Title</FormLabel>
                   <FormControl>
-                    <Input placeholder="Call Mom to catch up..." {...field} />
+                    <Input 
+                      placeholder={PLACEHOLDERS[placeholderIdx]} 
+                      className={cn(
+                        "placeholder:transition-opacity placeholder:duration-300 placeholder:ease-in-out",
+                        placeholderFade ? "placeholder:opacity-50" : "placeholder:opacity-0"
+                      )}
+                      {...field} 
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
