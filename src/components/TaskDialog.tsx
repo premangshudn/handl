@@ -64,7 +64,7 @@ const PLACEHOLDERS = [
   "Book flight tickets...",
   "Apply for leaves...",
   "Water the indoor plants...",
-  "Draft response to team proposal..."
+  "Read 10 pages of my book..."
 ];
 
 export function TaskDialog({ task, open, onOpenChange, onRefresh, defaultStatus, minPosition }: TaskDialogProps) {
@@ -79,8 +79,8 @@ export function TaskDialog({ task, open, onOpenChange, onRefresh, defaultStatus,
       setTimeout(() => {
         setPlaceholderIdx((prev) => (prev + 1) % PLACEHOLDERS.length);
         setPlaceholderFade(true);
-      }, 300);
-    }, 4000);
+      }, 500);
+    }, 2000);
 
     return () => clearInterval(timer);
   }, [open, task]);
@@ -214,7 +214,7 @@ export function TaskDialog({ task, open, onOpenChange, onRefresh, defaultStatus,
                     <Input 
                       placeholder={PLACEHOLDERS[placeholderIdx]} 
                       className={cn(
-                        "placeholder:transition-opacity placeholder:duration-300 placeholder:ease-in-out",
+                        "placeholder:transition-opacity placeholder:duration-500 placeholder:ease-in-out",
                         placeholderFade ? "placeholder:opacity-50" : "placeholder:opacity-0"
                       )}
                       {...field} 
