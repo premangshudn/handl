@@ -45,13 +45,13 @@ describe('taskUtils - priority and status mapping', () => {
 
   it('should map DB status to Form status correctly', () => {
     expect(mapDBStatusToForm('Done')).toBe('Done');
-    expect(mapDBStatusToForm('Todo')).toBe('Pending');
-    expect(mapDBStatusToForm('In Progress')).toBe('Pending');
+    expect(mapDBStatusToForm('Todo')).toBe('Active');
+    expect(mapDBStatusToForm('In Progress')).toBe('Active');
   });
 
   it('should map Form status to DB status correctly', () => {
     expect(mapFormStatusToDB('Done')).toBe('Done');
-    expect(mapFormStatusToDB('Pending')).toBe('Todo');
+    expect(mapFormStatusToDB('Active')).toBe('Todo');
   });
 });
 

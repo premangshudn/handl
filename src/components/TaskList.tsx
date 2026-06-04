@@ -143,8 +143,8 @@ export function TaskList({ tasks, onTaskClick, onRefresh, onTagClick }: TaskList
   };
 
   const statusLabels = {
-    Todo: 'Pending',
-    'In Progress': 'Pending',
+    Todo: 'Active',
+    'In Progress': 'Active',
     Done: 'Done',
   };
 

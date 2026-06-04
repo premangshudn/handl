@@ -46,14 +46,14 @@ export function mapFormPriorityToDB(p: 'Later' | 'Now'): Task['priority'] {
 /**
  * Maps database status to client-side Form status.
  */
-export function mapDBStatusToForm(s: Task['status']): 'Pending' | 'Done' {
-  return s === 'Done' ? 'Done' : 'Pending';
+export function mapDBStatusToForm(s: Task['status']): 'Active' | 'Done' {
+  return s === 'Done' ? 'Done' : 'Active';
 }
 
 /**
  * Maps client-side Form status to database status.
  */
-export function mapFormStatusToDB(s: 'Pending' | 'Done'): Task['status'] {
+export function mapFormStatusToDB(s: 'Active' | 'Done'): Task['status'] {
   return s === 'Done' ? 'Done' : 'Todo';
 }
 

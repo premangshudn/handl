@@ -20,13 +20,6 @@ import {
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
-} from '@/components/ui/select';
 import type { Task } from '@/lib/supabase';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
@@ -35,6 +28,7 @@ import { format, startOfDay } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Switch } from '@/components/ui/switch';
 import { 
   mapDBPriorityToForm, 
   mapFormPriorityToDB, 
@@ -46,7 +40,7 @@ const taskSchema = z.object({
   title: z.string().min(1, 'Title is required').max(150, 'Title must be under 150 characters'),
   description: z.string().max(3000, 'Description must be under 3000 characters').optional(),
   priority: z.enum(['Later', 'Now']),
-  status: z.enum(['Pending', 'Done']),
+  status: z.enum(['Active', 'Done']),
   due_date: z.string().optional(),
   tags: z.string().optional(),
 });
@@ -70,7 +64,7 @@ export function TaskDialog({ task, open, onOpenChange, onRefresh, defaultStatus,
       title: '',
       description: '',
       priority: 'Later',
-      status: defaultStatus ? mapDBStatusToForm(defaultStatus) : 'Pending',
+      status: defaultStatus ? mapDBStatusToForm(defaultStatus) : 'Active',
       due_date: '',
       tags: '',
     },
@@ -91,7 +85,7 @@ export function TaskDialog({ task, open, onOpenChange, onRefresh, defaultStatus,
         title: '',
         description: '',
         priority: 'Later',
-        status: defaultStatus ? mapDBStatusToForm(defaultStatus) : 'Pending',
+        status: defaultStatus ? mapDBStatusToForm(defaultStatus) : 'Active',
         due_date: '',
         tags: '',
       });
@@ -213,50 +207,28 @@ export function TaskDialog({ task, open, onOpenChange, onRefresh, defaultStatus,
                 </FormItem>
               )}
             />
-            <div className="grid grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="status"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Status</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select status" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="Pending">Pending</SelectItem>
-                        <SelectItem value="Done">Done</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="priority"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Priority</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select priority" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="Later">Later</SelectItem>
-                        <SelectItem value="Now">Now</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
+            <FormField
+              control={form.control}
+              name="priority"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-center justify-between rounded-xl border p-4 bg-background/50 shadow-inner">
+                  <div className="space-y-0.5">
+                    <FormLabel className="text-sm font-semibold flex items-center gap-1.5 cursor-pointer">
+                      Handle Now ⚡
+                    </FormLabel>
+                    <p className="text-[11px] text-muted-foreground">
+                      Mark this as high priority for immediate attention
+                    </p>
+                  </div>
+                  <FormControl>
+                    <Switch
+                      checked={field.value === 'Now'}
+                      onCheckedChange={(checked) => field.onChange(checked ? 'Now' : 'Later')}
+                    />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
             <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
