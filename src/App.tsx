@@ -16,7 +16,17 @@ export default function App() {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [tasks, setTasks] = useState<Task[]>([]);
-  const [activeView, setActiveView] = useState<ViewType>('dashboard');
+  const [activeView, setActiveView] = useState<ViewType>(() => {
+    const saved = localStorage.getItem('handl_active_view');
+    if (saved && ['dashboard', 'list'].includes(saved)) {
+      return saved as ViewType;
+    }
+    return 'dashboard';
+  });
+
+  useEffect(() => {
+    localStorage.setItem('handl_active_view', activeView);
+  }, [activeView]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [defaultStatus, setDefaultStatus] = useState<Task['status']>('Todo');
@@ -73,9 +83,12 @@ export default function App() {
 
     fetchTasks();
     if (!initialViewLoaded.current) {
-      const preferredView = session.user.user_metadata?.default_view as ViewType;
-      if (preferredView && ['dashboard', 'list'].includes(preferredView)) {
-        setActiveView(preferredView);
+      const saved = localStorage.getItem('handl_active_view');
+      if (!saved) {
+        const preferredView = session.user.user_metadata?.default_view as ViewType;
+        if (preferredView && ['dashboard', 'list'].includes(preferredView)) {
+          setActiveView(preferredView);
+        }
       }
       initialViewLoaded.current = true;
     }
