@@ -62,6 +62,8 @@ export default function App() {
 
       if (event === 'SIGNED_OUT') {
         localStorage.removeItem('handl_active_view');
+        setActiveView('dashboard');
+        initialViewLoaded.current = false;
       }
 
       if (event === 'PASSWORD_RECOVERY') {

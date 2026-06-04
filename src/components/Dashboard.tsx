@@ -248,7 +248,7 @@ export function Dashboard({ tasks, session, onRefresh, onTaskClick }: DashboardP
           </Card>
 
           {/* Focus of the Day Checklist */}
-          <Card className="border shadow-sm bg-card gap-0">
+          <Card className="border shadow-sm bg-card gap-0 pb-4">
             <CardHeader className="pb-4 border-b">
               <div className="flex items-center justify-between">
                 <div>
@@ -296,7 +296,7 @@ export function Dashboard({ tasks, session, onRefresh, onTaskClick }: DashboardP
                             e.stopPropagation();
                             handleToggleComplete(task.id);
                           }}
-                          className="mt-1 h-5 w-5 rounded-md border-2 border-muted-foreground/30 hover:border-primary flex items-center justify-center transition-all bg-background text-transparent hover:text-primary active:scale-90 shrink-0"
+                          className="mt-0.5 h-5 w-5 rounded-md border-2 border-muted-foreground/30 hover:border-primary flex items-center justify-center transition-all bg-background text-transparent hover:text-primary active:scale-90 shrink-0"
                         >
                           <CheckCircle2 className="h-4 w-4 opacity-0 group-hover:opacity-40 transition-opacity" />
                         </button>
@@ -313,7 +313,7 @@ export function Dashboard({ tasks, session, onRefresh, onTaskClick }: DashboardP
                                 title={isOverdue ? "Overdue Handl" : "Now Handl due soon"}
                               />
                             )}
-                            <h4 className="font-semibold text-sm leading-none text-foreground group-hover:text-primary transition-colors">
+                            <h4 className="font-semibold text-sm leading-snug text-foreground group-hover:text-primary transition-colors">
                               {task.title}
                             </h4>
                             <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
@@ -352,9 +352,9 @@ export function Dashboard({ tasks, session, onRefresh, onTaskClick }: DashboardP
                   <div className="p-3 bg-primary/10 rounded-full text-primary mb-3">
                     <CheckCircle2 className="h-6 w-6" />
                   </div>
-                  <h4 className="font-bold text-sm">Clear Mind, Safe Focus</h4>
+                  <h4 className="font-bold text-sm">All Clear for Today</h4>
                   <p className="text-xs text-muted-foreground max-w-xs mt-1">
-                    No critical or urgent Handls pending! Capture new notes or take a moment of rest.
+                    No priority items or Handls due today. Take a mindful breath, or capture something new.
                   </p>
                 </div>
               )}
