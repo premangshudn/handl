@@ -64,7 +64,10 @@ const PLACEHOLDERS = [
   "Book flight tickets...",
   "Apply for leaves...",
   "Water the indoor plants...",
-  "Read 10 pages of my book..."
+  "Read 10 pages of my book...",
+  "File income tax returns...",
+  "Plan the next vacation...",
+  "Arrange the wardrobe..."
 ];
 
 export function TaskDialog({ task, open, onOpenChange, onRefresh, defaultStatus, minPosition }: TaskDialogProps) {

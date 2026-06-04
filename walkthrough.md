@@ -37,7 +37,8 @@ If you haven't already:
    npm run dev
    ```
 3. **Open the App**:
-   Navigate to [http://localhost:5173](http://localhost:5173) in your browser.
+   - Navigate to the local server at [http://localhost:5173](http://localhost:5173) in your browser.
+   - Or view the live deployment at [https://handl-space.vercel.app](https://handl-space.vercel.app).
 
 ---
 
