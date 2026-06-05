@@ -218,8 +218,23 @@ export function TaskList({ tasks, onTaskClick, onRefresh, onTagClick }: TaskList
               return dueDate >= today && dueDate <= maxDate;
             })();
 
-            const isAlertActive = !isCompleted && (isOverdue || (isImmediate && isDueSoon));
-            const displayDueToday = !isImmediate && isDueToday;
+            const isAlertActive = !isCompleted && (isOverdue || (isImmediate && isDueSoon) || isDueToday);
+            const showPriorityBadge = !isCompleted;
+            const badgeText = isOverdue ? 'Overdue' : (isDueToday ? 'Due Today' : (isImmediate ? 'Now' : 'Later'));
+            const badgeColorClass = isOverdue
+              ? 'bg-red-500 text-white border-transparent'
+              : isImmediate 
+                ? 'bg-orange-600 text-white border-transparent dark:bg-orange-600 dark:text-white' 
+                : isDueToday 
+                  ? 'bg-amber-500 text-white border-transparent dark:bg-amber-500 dark:text-white' 
+                  : 'bg-slate-400 dark:bg-slate-500 text-white border-transparent';
+            const dueDateColorClass = isOverdue
+              ? 'text-red-500 font-medium'
+              : isDueToday
+                ? isImmediate
+                  ? 'text-orange-600 dark:text-orange-400 font-medium'
+                  : 'text-amber-600 dark:text-amber-400 font-medium'
+                : 'text-muted-foreground';
 
             const isDragOver = index === dragOverIndex;
             const isDragging = index === draggedIndex;
@@ -273,38 +288,40 @@ export function TaskList({ tasks, onTaskClick, onRefresh, onTagClick }: TaskList
                   </button>
                 </TableCell>
                 <TableCell className="py-3">
-                  <div className="flex flex-col gap-1">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      {isAlertActive && (
-                        <span 
-                          className={`h-2 w-2 rounded-full shrink-0 ${
-                            isOverdue 
-                              ? 'bg-red-500 animate-soft-glow-red' 
+                  <div className="flex items-start gap-2.5">
+                    {isAlertActive && (
+                      <span 
+                        className={`mt-1.5 h-2 w-2 rounded-full shrink-0 ${
+                          isOverdue 
+                            ? 'bg-red-500 animate-soft-glow-red' 
+                            : isImmediate
+                              ? 'bg-orange-600 animate-soft-glow-orange'
                               : 'bg-amber-500 animate-soft-glow-amber'
-                          }`}
-                          title={isOverdue ? "Overdue Handl" : "Immediate Handl due soon"}
-                        />
-                      )}
+                        }`}
+                        title={isOverdue ? "Overdue Handl" : "Immediate Handl due soon"}
+                      />
+                    )}
+                    <div className="flex-1 flex flex-col gap-1">
                       <span className={`font-semibold group-hover:text-primary transition-all duration-200 ${isCompleted ? 'line-through text-muted-foreground/60' : ''}`}>
                         {task.title}
                       </span>
+                      {task.tags && task.tags.length > 0 && (
+                        <div className="flex gap-1 flex-wrap">
+                          {task.tags.map(tag => (
+                            <span 
+                              key={tag} 
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                if (onTagClick) onTagClick(tag);
+                              }}
+                              className="text-[10px] text-muted-foreground px-1.5 py-0.5 bg-muted rounded hover:bg-primary/10 hover:text-primary transition-all cursor-pointer"
+                            >
+                              #{tag}
+                            </span>
+                          ))}
+                        </div>
+                      )}
                     </div>
-                    {task.tags && task.tags.length > 0 && (
-                      <div className="flex gap-1 flex-wrap">
-                        {task.tags.map(tag => (
-                          <span 
-                            key={tag} 
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              if (onTagClick) onTagClick(tag);
-                            }}
-                            className="text-[10px] text-muted-foreground px-1.5 py-0.5 bg-muted rounded hover:bg-primary/10 hover:text-primary transition-all cursor-pointer"
-                          >
-                            #{tag}
-                          </span>
-                        ))}
-                      </div>
-                    )}
                   </div>
                 </TableCell>
                 <TableCell className="py-3">
@@ -313,27 +330,19 @@ export function TaskList({ tasks, onTaskClick, onRefresh, onTagClick }: TaskList
                   </Badge>
                 </TableCell>
                 <TableCell className="py-3">
-                  {displayDueToday ? (
-                    <Badge variant="outline" className="bg-amber-500 text-white border-transparent dark:bg-amber-500 dark:text-white text-[11px]">
-                      Due Today
+                  {showPriorityBadge ? (
+                    <Badge variant="outline" className={`${badgeColorClass} ${isAlertActive ? 'animate-pulse' : ''} text-[11px]`}>
+                      {badgeText}
                     </Badge>
                   ) : (
-                    <Badge variant="outline" className={`${priorityColors[task.priority]} text-[11px]`}>
-                      {priorityLabels[task.priority] || task.priority}
-                    </Badge>
+                    <span className="text-muted-foreground text-sm">-</span>
                   )}
                 </TableCell>
                 <TableCell className="py-3">
                   {task.due_date ? (
-                    <div className={`flex items-center gap-1.5 text-sm ${
-                      isOverdue 
-                        ? 'text-red-500 font-medium' 
-                        : displayDueToday
-                          ? 'text-amber-600 dark:text-amber-400 font-medium'
-                          : 'text-muted-foreground'
-                    }`}>
+                    <div className={`flex items-center gap-1.5 text-sm ${dueDateColorClass}`}>
                       <Clock className="h-3.5 w-3.5" />
-                      {displayDueToday ? 'Today' : format(new Date(task.due_date), 'PPP')}
+                      <span>{isDueToday ? 'Today' : format(new Date(task.due_date), 'PPP')}</span>
                     </div>
                   ) : (
                     <span className="text-muted-foreground text-sm">-</span>

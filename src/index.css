@@ -169,6 +169,11 @@
   animation: soft-glow 3s ease-in-out infinite;
 }
 
+.animate-soft-glow-orange {
+  --glow-color: rgba(234, 88, 12, 0.7);
+  animation: soft-glow 3s ease-in-out infinite;
+}
+
 .animate-soft-glow-amber {
   --glow-color: rgba(245, 158, 11, 0.7);
   animation: soft-glow 3s ease-in-out infinite;

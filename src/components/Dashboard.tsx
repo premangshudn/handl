@@ -281,9 +281,16 @@ export function Dashboard({ tasks, session, onRefresh, onTaskClick }: DashboardP
                       return dueDate >= today && dueDate <= maxDate;
                     })();
                     
-                    const isAlertActive = isOverdue || (isImmediate && isDueSoon);
+                    const isAlertActive = !!isOverdue || (isImmediate && !!isDueSoon) || !!isDueToday;
                     const animationClass = isAlertActive ? 'animate-pulse' : '';
-                    const showDueDate = task.due_date && !( !isImmediate && isDueToday );
+                    const showPriorityBadge = !(isOverdue && !isImmediate);
+                    const badgeText = isDueToday ? 'Due Today' : (isImmediate ? 'Now' : 'Later');
+                    const badgeColorClass = isImmediate 
+                      ? 'bg-orange-600 text-white border-transparent' 
+                      : isDueToday 
+                        ? 'bg-amber-500 text-white border-transparent' 
+                        : 'bg-slate-400 dark:bg-slate-500 text-white border-transparent';
+                    const showDueDate = task.due_date && !isDueToday;
 
                     return (
                       <div 
@@ -301,45 +308,45 @@ export function Dashboard({ tasks, session, onRefresh, onTaskClick }: DashboardP
                           <CheckCircle2 className="h-4 w-4 opacity-0 group-hover:opacity-40 transition-opacity" />
                         </button>
 
-                        <div className="flex-1 space-y-1">
-                          <div className="flex items-center gap-2 flex-wrap">
-                            {isAlertActive && (
-                              <span 
-                                className={`h-2 w-2 rounded-full shrink-0 ${
-                                  isOverdue 
-                                    ? 'bg-red-500 animate-soft-glow-red' 
+                        <div className="flex-1 flex items-start gap-2.5">
+                          {isAlertActive && (
+                            <span 
+                              className={`mt-1.5 h-2 w-2 rounded-full shrink-0 ${
+                                isOverdue 
+                                  ? 'bg-red-500 animate-soft-glow-red' 
+                                  : isImmediate
+                                    ? 'bg-orange-600 animate-soft-glow-orange'
                                     : 'bg-amber-500 animate-soft-glow-amber'
-                                }`}
-                                title={isOverdue ? "Overdue Handl" : "Now Handl due soon"}
-                              />
-                            )}
-                            <h4 className="font-semibold text-sm leading-snug text-foreground group-hover:text-primary transition-colors">
-                              {task.title}
-                            </h4>
-                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                              isImmediate 
-                                ? 'bg-orange-600 text-white border-transparent' 
-                                : isDueToday
-                                  ? 'bg-amber-500 text-white border-transparent'
-                                  : 'bg-slate-400 dark:bg-slate-500 text-white border-transparent'
-                            } ${animationClass}`}>
-                              {isImmediate ? 'Now' : isDueToday ? 'Due Today' : 'Later'}
-                            </span>
-                          </div>
-                          {task.description && (
-                            <p className="text-xs text-muted-foreground line-clamp-1">
-                              {task.description}
-                            </p>
+                              }`}
+                              title={isOverdue ? "Overdue Handl" : "Handl Alert"}
+                            />
                           )}
-                          {showDueDate && dueDateObj && (
-                            <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground pt-1">
-                              <Clock className="h-3 w-3" />
-                              <span>Due: {dueDateObj.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</span>
-                              {isBefore(dueDateObj, startOfDay(new Date())) && (
-                                <span className="text-red-500 font-bold bg-red-50 dark:bg-red-950/20 px-1.5 py-0.5 rounded text-[9px] uppercase tracking-wide animate-pulse">Overdue</span>
+                          <div className="flex-1 space-y-1">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <h4 className="font-semibold text-sm leading-snug text-foreground group-hover:text-primary transition-colors">
+                                {task.title}
+                              </h4>
+                              {showPriorityBadge && (
+                                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${badgeColorClass} ${animationClass}`}>
+                                  {badgeText}
+                                </span>
                               )}
                             </div>
-                          )}
+                            {task.description && (
+                              <p className="text-xs text-muted-foreground line-clamp-1">
+                                {task.description}
+                              </p>
+                            )}
+                            {showDueDate && dueDateObj && (
+                              <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground pt-1">
+                                <Clock className="h-3 w-3" />
+                                <span>Due: {dueDateObj.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</span>
+                                {isOverdue && (
+                                  <span className="text-white font-bold bg-red-500 px-1.5 py-0.5 rounded-md text-[9px] uppercase tracking-wide animate-pulse">Overdue</span>
+                                )}
+                              </div>
+                            )}
+                          </div>
                         </div>
 
                         <ArrowRight className="h-4 w-4 text-muted-foreground/30 opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all self-center" />
