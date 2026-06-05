@@ -263,53 +263,55 @@ export function TaskList({ tasks, onTaskClick, onRefresh, onTagClick }: TaskList
                 >
                   <GripVertical className="h-4 w-4" />
                 </TableCell>
-                <TableCell className="py-3 pl-4 pr-0">
-                  <button
-                    onClick={(e) => handleToggleComplete(e, task)}
-                    className="flex items-center justify-center h-5 w-5 rounded-full hover:scale-105 transition-transform duration-200 focus:outline-none"
-                  >
-                    {isCompleted ? (
-                      <CheckCircle2 className="h-5 w-5 text-green-500 fill-green-500" />
-                    ) : (
-                      <Circle className="h-5 w-5 text-muted-foreground/30 hover:text-primary transition-colors" />
-                    )}
-                  </button>
-                </TableCell>
-                <TableCell className="py-3">
-                  <div className="flex items-start gap-2.5">
-                    {isAlertActive && (
-                      <span 
-                        className={`mt-1.5 h-2 w-2 rounded-full shrink-0 ${
-                          isOverdue 
-                            ? 'bg-red-500 animate-soft-glow-red' 
-                            : isImmediate
-                              ? 'bg-orange-600 animate-soft-glow-orange'
-                              : 'bg-amber-500 animate-soft-glow-amber'
-                        }`}
-                        title={isOverdue ? "Overdue Handl" : "Immediate Handl due soon"}
-                      />
-                    )}
-                    <div className="flex-1 flex flex-col gap-1">
-                      <span className={`font-semibold group-hover:text-primary transition-all duration-200 ${isCompleted ? 'line-through text-muted-foreground/60' : ''}`}>
-                        {task.title}
-                      </span>
-                      {task.tags && task.tags.length > 0 && (
-                        <div className="flex gap-1 flex-wrap">
-                          {task.tags.map(tag => (
-                            <span 
-                              key={tag} 
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                if (onTagClick) onTagClick(tag);
-                              }}
-                              className="text-[10px] text-muted-foreground px-1.5 py-0.5 bg-muted rounded hover:bg-primary/10 hover:text-primary transition-all cursor-pointer"
-                            >
-                              #{tag}
-                            </span>
-                          ))}
-                        </div>
+                <TableCell className="py-3 pl-1.5 pr-0">
+                  <div className="flex items-center gap-1.5">
+                    <div className="w-1.5 h-1.5 flex items-center justify-center shrink-0">
+                      {isAlertActive && (
+                        <span 
+                          className={`h-1.5 w-1.5 rounded-full shrink-0 ${
+                            isOverdue 
+                              ? 'bg-red-500 animate-soft-glow-red' 
+                              : isImmediate
+                                ? 'bg-orange-600 animate-soft-glow-orange'
+                                : 'bg-amber-500 animate-soft-glow-amber'
+                          }`}
+                          title={isOverdue ? "Overdue Handl" : "Immediate Handl due soon"}
+                        />
                       )}
                     </div>
+                    <button
+                      onClick={(e) => handleToggleComplete(e, task)}
+                      className="flex items-center justify-center h-5 w-5 rounded-full hover:scale-105 transition-transform duration-200 focus:outline-none"
+                    >
+                      {isCompleted ? (
+                        <CheckCircle2 className="h-5 w-5 text-green-500 fill-green-500" />
+                      ) : (
+                        <Circle className="h-5 w-5 text-muted-foreground/30 hover:text-primary transition-colors" />
+                      )}
+                    </button>
+                  </div>
+                </TableCell>
+                <TableCell className="py-3">
+                  <div className="flex flex-col gap-1">
+                    <span className={`font-semibold group-hover:text-primary transition-all duration-200 ${isCompleted ? 'line-through text-muted-foreground/60' : ''}`}>
+                      {task.title}
+                    </span>
+                    {task.tags && task.tags.length > 0 && (
+                      <div className="flex gap-1 flex-wrap">
+                        {task.tags.map(tag => (
+                          <span 
+                            key={tag} 
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (onTagClick) onTagClick(tag);
+                            }}
+                            className="text-[10px] text-muted-foreground px-1.5 py-0.5 bg-muted rounded hover:bg-primary/10 hover:text-primary transition-all cursor-pointer"
+                          >
+                            #{tag}
+                          </span>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </TableCell>
                 <TableCell className="py-3">
