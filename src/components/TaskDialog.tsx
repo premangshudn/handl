@@ -314,7 +314,7 @@ export function TaskDialog({ task, open, onOpenChange, onRefresh, defaultStatus,
                 name="tags"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Tags (comma separated)</FormLabel>
+                    <FormLabel>Tags</FormLabel>
                     <FormControl>
                       <Input placeholder="work, urgent" {...field} className="rounded-xl shadow-inner bg-background/50" />
                     </FormControl>
