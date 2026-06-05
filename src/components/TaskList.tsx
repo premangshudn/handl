@@ -122,19 +122,7 @@ export function TaskList({ tasks, onTaskClick, onRefresh, onTagClick }: TaskList
     setDraggedIndex(null);
     setDragOverIndex(null);
   };
-  const priorityColors = {
-    Critical: 'bg-orange-600 text-white border-transparent dark:bg-orange-600 dark:text-white',
-    High: 'bg-orange-600 text-white border-transparent dark:bg-orange-600 dark:text-white',
-    Medium: 'bg-slate-400 text-white border-transparent dark:bg-slate-500 dark:text-white',
-    Low: 'bg-slate-400 text-white border-transparent dark:bg-slate-500 dark:text-white',
-  };
 
-  const priorityLabels = {
-    Critical: 'Now',
-    High: 'Now',
-    Medium: 'Later',
-    Low: 'Later',
-  };
 
   const statusColors = {
     Todo: 'bg-muted text-muted-foreground',
