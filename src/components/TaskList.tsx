@@ -199,14 +199,7 @@ export function TaskList({ tasks, onTaskClick, onRefresh, onTagClick }: TaskList
               const today = startOfDay(new Date());
               return dueDate.getTime() === today.getTime();
             })();
-            const isDueSoon = task.due_date && !isCompleted && (() => {
-              const dueDate = startOfDay(new Date(task.due_date));
-              const today = startOfDay(new Date());
-              const maxDate = new Date(today.getTime() + 5 * 24 * 60 * 60 * 1000);
-              return dueDate >= today && dueDate <= maxDate;
-            })();
-
-            const isAlertActive = !isCompleted && (isOverdue || (isImmediate && isDueSoon) || isDueToday);
+            const isAlertActive = !isCompleted && (isOverdue || isDueToday);
             const showPriorityBadge = !isCompleted;
             const badgeText = isOverdue ? 'Overdue' : (isDueToday ? 'Due Today' : (isImmediate ? 'Now' : 'Later'));
             const badgeColorClass = isOverdue

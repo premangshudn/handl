@@ -274,14 +274,7 @@ export function Dashboard({ tasks, session, onRefresh, onTaskClick }: DashboardP
                       const today = startOfDay(new Date());
                       return dueDate.getTime() === today.getTime();
                     })();
-                    const isDueSoon = dueDateObj && (() => {
-                      const dueDate = startOfDay(dueDateObj);
-                      const today = startOfDay(new Date());
-                      const maxDate = new Date(today.getTime() + 5 * 24 * 60 * 60 * 1000);
-                      return dueDate >= today && dueDate <= maxDate;
-                    })();
-                    
-                    const isAlertActive = !!isOverdue || (isImmediate && !!isDueSoon) || !!isDueToday;
+                    const isAlertActive = !!isOverdue || !!isDueToday;
                     const animationClass = isAlertActive ? 'animate-pulse' : '';
                     const showPriorityBadge = !(isOverdue && !isImmediate);
                     const badgeText = isDueToday ? 'Due Today' : (isImmediate ? 'Now' : 'Later');
