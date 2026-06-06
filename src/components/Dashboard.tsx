@@ -276,7 +276,7 @@ export function Dashboard({ tasks, session, onRefresh, onTaskClick }: DashboardP
                     })();
                     const isAlertActive = !!isOverdue || !!isDueToday;
                     const animationClass = isAlertActive ? 'animate-pulse' : '';
-                    const showPriorityBadge = !(isOverdue && !isImmediate);
+                    const showPriorityBadge = !isOverdue;
                     const badgeText = isDueToday ? 'Due Today' : (isImmediate ? 'Now' : 'Later');
                     const badgeColorClass = isImmediate 
                       ? 'bg-orange-600 text-white border-transparent' 
