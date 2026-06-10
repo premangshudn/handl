@@ -29,3 +29,10 @@ dist-ssr
 
 # Screenshots
 screenshots/
+
+# Playwright
+playwright-report/
+test-results/
+
+# Bug Report
+bug_report.md

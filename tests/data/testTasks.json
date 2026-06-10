@@ -1,0 +1,21 @@
+{
+  "validTaskLater": {
+    "title": "Automated Task Later",
+    "description": "Created by Playwright API test client with Later priority.",
+    "priority": "Medium",
+    "status": "Todo",
+    "tags": ["automated", "later"]
+  },
+  "validTaskNow": {
+    "title": "Automated Task Now",
+    "description": "Created by Playwright API test client with Now priority.",
+    "priority": "High",
+    "status": "Todo",
+    "tags": ["automated", "now"]
+  },
+  "invalidTask": {
+    "title": "",
+    "priority": "Medium",
+    "status": "Todo"
+  }
+}

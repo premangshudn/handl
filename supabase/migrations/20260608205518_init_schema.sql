@@ -73,9 +73,6 @@ CREATE TRIGGER update_tasks_updated_at
     FOR EACH ROW
     EXECUTE FUNCTION update_updated_at_column();
 
--- 7. Secure Account Deletion RPC
--- This function runs with SECURITY DEFINER to bypass standard auth restrictions
--- allowing the currently authenticated user to delete their own account from auth.users.
 CREATE OR REPLACE FUNCTION delete_user_account()
 RETURNS void
 LANGUAGE plpgsql
@@ -94,4 +91,3 @@ BEGIN
     DELETE FROM auth.users WHERE id = auth.uid();
 END;
 $$;
-
